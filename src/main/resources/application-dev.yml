@@ -1,0 +1,8 @@
+spring:
+  jpa:
+    show-sql: false     # ✅ 可选，开发时打印 SQL
+app:
+  cookie-secure: false
+
+
+

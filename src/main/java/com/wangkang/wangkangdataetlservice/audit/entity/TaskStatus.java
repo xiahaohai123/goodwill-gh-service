@@ -1,0 +1,9 @@
+package com.wangkang.wangkangdataetlservice.audit.entity;
+
+public enum TaskStatus {
+    RUNNING,
+    SUCCESS,
+    FAILED,
+    WARNING,
+    PENDING,
+}

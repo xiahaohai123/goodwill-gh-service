@@ -1,0 +1,4 @@
+app:
+  cookie-secure: true
+  init:
+    password: ${INIT_PASSWORD}
