@@ -6,6 +6,7 @@ import com.wangkang.goodwillghservice.dao.goodwillghservice.audit.repository.Log
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.model.User;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.repository.UserRepository;
 import com.wangkang.goodwillghservice.exception.BusinessException;
+import com.wangkang.goodwillghservice.locale.MessageService;
 import com.wangkang.goodwillghservice.security.entity.LoginRequest;
 import com.wangkang.goodwillghservice.security.service.CustomUserDetailsService;
 import com.wangkang.goodwillghservice.security.service.JwtService;
@@ -42,6 +43,7 @@ public class AuthController {
     private final JwtService jwtService;
     private final LoginLogRepository loginLogRepository;
     private final CustomUserDetailsService customUserDetailsService;
+    private final MessageService messageService;
     @Value("${app.cookie-secure}")
     private boolean cookieSecure;
 
@@ -53,12 +55,13 @@ public class AuthController {
                           UserRepository userRepository,
                           JwtService jwtService,
                           LoginLogRepository loginLogRepository,
-                          CustomUserDetailsService customUserDetailsService) {
+                          CustomUserDetailsService customUserDetailsService, MessageService messageService) {
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
         this.jwtService = jwtService;
         this.loginLogRepository = loginLogRepository;
         this.customUserDetailsService = customUserDetailsService;
+        this.messageService = messageService;
     }
 
     @PostMapping("/login")
@@ -67,14 +70,16 @@ public class AuthController {
                                         HttpServletResponse response) {
         if (StringUtils.isBlank(loginRequest.getAreaCode()) || StringUtils.isBlank(
                 loginRequest.getPhoneNumber()) || StringUtils.isBlank(loginRequest.getPassword())) {
-            throw new BusinessException("Invalid input");
+            String message = messageService.getMessage(
+                    "Required.parameters.blank" + " areaCode, phoneNumber, password");
+            throw new BusinessException(message);
         }
         User user = userRepository.findByAreaCodeAndPhoneNumber(loginRequest.getAreaCode(),
                 loginRequest.getPhoneNumber());
 
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Invalid username or password"));
+                    .body(Map.of("error", messageService.getMessage("Auth.credentials.bad")));
         }
 
         LoginLog loginLog = new LoginLog();
@@ -89,7 +94,7 @@ public class AuthController {
             loginLog.setStatus(TaskStatus.FAILED.name());
             loginLog.setFailureReason("Incorrect account password");
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
-                    .body(Map.of("error", "Invalid username or password"));
+                    .body(Map.of("error", messageService.getMessage("Auth.credentials.bad")));
         }
         log.debug("Login: " + user.getAreaCode() + user.getAreaCode());
         Set<GrantedAuthority> grantedAuthorities = customUserDetailsService.loadByPhone(user.getAreaCode(),
