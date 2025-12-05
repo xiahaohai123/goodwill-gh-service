@@ -1,15 +1,24 @@
 package com.wangkang.goodwillghservice.security.entity;
 
 public class LoginRequest {
-    private String username;
+    private String phoneNumber;
+    private String areaCode;
     private String password;
 
-    public String getUsername() {
-        return username;
+    public String getPhoneNumber() {
+        return phoneNumber;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public String getAreaCode() {
+        return areaCode;
+    }
+
+    public void setAreaCode(String areaCode) {
+        this.areaCode = areaCode;
     }
 
     public String getPassword() {

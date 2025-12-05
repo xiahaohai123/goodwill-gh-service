@@ -14,9 +14,10 @@ public class User {
     @GeneratedValue(strategy = GenerationType.UUID)
     @JdbcType(value = UUIDJdbcType.class)
     private UUID id;
-
-    @Column(unique = true, nullable = false)
-    private String username;
+    @Column(name = "phone_number", nullable = false)
+    private String phoneNumber;
+    @Column(name = "area_code", nullable = false)
+    private String areaCode;
     @Column(name = "display_name", nullable = false)
     private String displayName;
     @Column(nullable = false)
@@ -41,12 +42,20 @@ public class User {
         this.id = id;
     }
 
-    public String getUsername() {
-        return username;
+    public String getPhoneNumber() {
+        return phoneNumber;
     }
 
-    public void setUsername(String username) {
-        this.username = username;
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public String getAreaCode() {
+        return areaCode;
+    }
+
+    public void setAreaCode(String areaCode) {
+        this.areaCode = areaCode;
     }
 
     public String getPassword() {

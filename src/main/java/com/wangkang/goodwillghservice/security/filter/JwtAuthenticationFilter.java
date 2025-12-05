@@ -1,6 +1,8 @@
 package com.wangkang.goodwillghservice.security.filter;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.wangkang.goodwillghservice.security.entity.CustomAuthenticationToken;
+import com.wangkang.goodwillghservice.security.service.CustomUserDetailsService;
 import com.wangkang.goodwillghservice.security.service.JwtService;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
@@ -10,26 +12,24 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
-import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
-import java.util.Collection;
+import java.util.Set;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private static final Log log = LogFactory.getLog(JwtAuthenticationFilter.class);
 
     private final JwtService jwtService;
-    private final UserDetailsService userDetailsService;
+    private final CustomUserDetailsService customUserDetailsService;
 
-    public JwtAuthenticationFilter(JwtService jwtService, UserDetailsService userDetailsService) {
+    public JwtAuthenticationFilter(JwtService jwtService,
+                                   CustomUserDetailsService customUserDetailsService) {
         this.jwtService = jwtService;
-        this.userDetailsService = userDetailsService;
+        this.customUserDetailsService = customUserDetailsService;
     }
 
     @Override
@@ -46,10 +46,11 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             return;
         }
         try {
-            String username = jwtService.validateToken(token);
-            UserDetails userDetails = userDetailsService.loadUserByUsername(username);
-            Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();
-            Authentication auth = new UsernamePasswordAuthenticationToken(username, null, authorities);
+            CustomAuthenticationToken customAuthenticationToken = jwtService.validateToken(token);
+            Set<GrantedAuthority> grantedAuthorities = customUserDetailsService.loadByCustomAuthenticationToken(
+                    customAuthenticationToken);
+            Authentication auth = new CustomAuthenticationToken(grantedAuthorities,
+                    customAuthenticationToken.getAreaCode(), customAuthenticationToken.getPhoneNumber());
             SecurityContextHolder.getContext().setAuthentication(auth);
             filterChain.doFilter(request, response);
         } catch (JWTVerificationException e) {

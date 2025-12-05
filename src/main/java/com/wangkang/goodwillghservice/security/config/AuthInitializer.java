@@ -13,20 +13,25 @@ import org.springframework.context.event.EventListener;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.stereotype.Component;
 
-import java.util.Collections;
 import java.util.Set;
 
+/** 账号和权限等初始化器 */
 @Component
-public class AdminInitializer {
-    @Value("${app.init.password:root}")
+public class AuthInitializer {
+    // 内置超级管理员手机号和区号（可配置或从环境变量读取）
+    @Value("${app.init.admin.phoneNumber:10000000000}")
+    private String adminPhone;
+    @Value("${app.init.admin.areaCode:+86}")
+    private String adminAreaCode;
+    @Value("${app.init.admin.password:root}")
     private String initPassword;
     private final UserRepository userRepository;
     private final PasswordEncoder passwordEncoder;
-    private static final Log log = LogFactory.getLog(AdminInitializer.class);
+    private static final Log log = LogFactory.getLog(AuthInitializer.class);
     private final PermissionGroupRepository permissionGroupRepository;
 
-    public AdminInitializer(UserRepository userRepository,
-                            PasswordEncoder passwordEncoder, PermissionGroupRepository permissionGroupRepository) {
+    public AuthInitializer(UserRepository userRepository,
+                           PasswordEncoder passwordEncoder, PermissionGroupRepository permissionGroupRepository) {
         this.userRepository = userRepository;
         this.passwordEncoder = passwordEncoder;
         this.permissionGroupRepository = permissionGroupRepository;
@@ -36,27 +41,13 @@ public class AdminInitializer {
     protected void initAdmin(ApplicationReadyEvent event) {
         String constantAdmin = BuiltInPermissionGroup.ADMIN.name();
         String constantUserGroup = BuiltInPermissionGroup.USER.name();
-        if (Boolean.FALSE.equals(permissionGroupRepository.existsPermissionGroupByName(constantUserGroup))) {
-            PermissionGroup permissionGroup = new PermissionGroup();
-            permissionGroup.setBuildIn(true);
-            permissionGroup.setName(constantUserGroup);
-            permissionGroup.setPermissions(Collections.emptySet());
-            permissionGroupRepository.save(permissionGroup);
-        }
 
-        if (Boolean.FALSE.equals(permissionGroupRepository.existsPermissionGroupByName(constantAdmin))) {
-            PermissionGroup permissionGroup = new PermissionGroup();
-            permissionGroup.setBuildIn(true);
-            permissionGroup.setName(constantAdmin);
-            permissionGroup.setPermissions(Collections.emptySet());
-            permissionGroupRepository.save(permissionGroup);
-        }
-
-        if (Boolean.FALSE.equals(userRepository.existsByUsernameIgnoreCase(constantAdmin))) {
+        if (Boolean.FALSE.equals(userRepository.existsByAreaCodeAndPhoneNumber(adminAreaCode, adminPhone))) {
             PermissionGroup adminGroup = permissionGroupRepository.findByName(constantAdmin);
             PermissionGroup userGroup = permissionGroupRepository.findByName(constantUserGroup);
             User admin = new User();
-            admin.setUsername(constantAdmin);
+            admin.setPhoneNumber(adminPhone);
+            admin.setAreaCode(adminAreaCode);
             admin.setDisplayName(constantAdmin);
             admin.setPassword(passwordEncoder.encode(initPassword));
             admin.setBuildIn(true);

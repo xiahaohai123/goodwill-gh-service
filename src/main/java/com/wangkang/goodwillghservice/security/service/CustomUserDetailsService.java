@@ -4,12 +4,13 @@ import com.wangkang.goodwillghservice.dao.goodwillghservice.security.model.Permi
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.model.PermissionGroup;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.model.User;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.repository.UserRepository;
+import com.wangkang.goodwillghservice.exception.BusinessException;
 import com.wangkang.goodwillghservice.security.BuiltInPermissionGroup;
+import com.wangkang.goodwillghservice.security.UserNotFoundException;
+import com.wangkang.goodwillghservice.security.entity.CustomAuthenticationToken;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
-import org.springframework.security.core.userdetails.UsernameNotFoundException;
 import org.springframework.stereotype.Service;
 
 import java.util.EnumSet;
@@ -17,18 +18,27 @@ import java.util.Set;
 import java.util.stream.Collectors;
 
 @Service
-public class UserDetailsServiceImpl implements UserDetailsService {
+public class CustomUserDetailsService {
+
     private final UserRepository userRepository;
 
-    public UserDetailsServiceImpl(UserRepository userRepository) {
+    public CustomUserDetailsService(UserRepository userRepository) {
         this.userRepository = userRepository;
     }
 
-    @Override
-    public UserDetails loadUserByUsername(String username) throws UsernameNotFoundException {
-        User user = userRepository.findByUsernameIgnoreCase(username);
+    public Set<GrantedAuthority> loadByCustomAuthenticationToken(CustomAuthenticationToken customAuthenticationToken) {
+        if (customAuthenticationToken == null || StringUtils.isBlank(
+                customAuthenticationToken.getAreaCode()) || StringUtils.isBlank(
+                customAuthenticationToken.getPhoneNumber())) {
+            throw new BusinessException("Invalid token");
+        }
+        return loadByPhone(customAuthenticationToken.getAreaCode(), customAuthenticationToken.getPhoneNumber());
+    }
+
+    public Set<GrantedAuthority> loadByPhone(String areaCode, String phoneNumber) throws UserNotFoundException {
+        User user = userRepository.findByAreaCodeAndPhoneNumber(areaCode, phoneNumber);
         if (user == null) {
-            throw new UsernameNotFoundException("User not found");
+            throw new UserNotFoundException("User not exists");
         }
         boolean isAdmin = false;
         Set<PermissionGroup> groups = user.getGroups();
@@ -54,11 +64,7 @@ public class UserDetailsServiceImpl implements UserDetailsService {
                     .map(SimpleGrantedAuthority::new)
                     .collect(Collectors.toSet());
         }
-
-        return new org.springframework.security.core.userdetails.User(
-                user.getUsername(),
-                user.getPassword(),
-                authorities
-        );
+        return authorities;
     }
+
 }

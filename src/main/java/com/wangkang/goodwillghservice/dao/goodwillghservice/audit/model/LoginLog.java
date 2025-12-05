@@ -19,8 +19,13 @@ public class LoginLog {
     @Column(name = "user_id", nullable = false)
     private UUID userId;
 
-    @Column(name = "username", nullable = false)
+    @Column(name = "username")
     private String username;
+
+    @Column(name = "phone_number", nullable = false)
+    private String phoneNumber;
+    @Column(name = "area_code", nullable = false)
+    private String areaCode;
 
     @Column(name = "display_name", nullable = false)
     private String displayName;
@@ -54,6 +59,22 @@ public class LoginLog {
 
     public void setUserId(UUID userId) {
         this.userId = userId;
+    }
+
+    public String getPhoneNumber() {
+        return phoneNumber;
+    }
+
+    public void setPhoneNumber(String phoneNumber) {
+        this.phoneNumber = phoneNumber;
+    }
+
+    public String getAreaCode() {
+        return areaCode;
+    }
+
+    public void setAreaCode(String areaCode) {
+        this.areaCode = areaCode;
     }
 
     public String getUsername() {

@@ -5,11 +5,14 @@ import com.wangkang.goodwillghservice.dao.goodwillghservice.audit.model.LoginLog
 import com.wangkang.goodwillghservice.dao.goodwillghservice.audit.repository.LoginLogRepository;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.model.User;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.repository.UserRepository;
+import com.wangkang.goodwillghservice.exception.BusinessException;
 import com.wangkang.goodwillghservice.security.entity.LoginRequest;
+import com.wangkang.goodwillghservice.security.service.CustomUserDetailsService;
 import com.wangkang.goodwillghservice.security.service.JwtService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
+import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -17,8 +20,6 @@ import org.springframework.beans.factory.annotation.Value;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.GrantedAuthority;
-import org.springframework.security.core.userdetails.UserDetails;
-import org.springframework.security.core.userdetails.UserDetailsService;
 import org.springframework.security.crypto.password.PasswordEncoder;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
@@ -27,9 +28,9 @@ import org.springframework.web.bind.annotation.RestController;
 
 import java.net.URLEncoder;
 import java.nio.charset.StandardCharsets;
-import java.util.Collection;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 @RestController
 @RequestMapping("/api/auth")
@@ -39,8 +40,8 @@ public class AuthController {
     private final PasswordEncoder passwordEncoder;
     private final UserRepository userRepository;
     private final JwtService jwtService;
-    private final UserDetailsService userDetailsService;
     private final LoginLogRepository loginLogRepository;
+    private final CustomUserDetailsService customUserDetailsService;
     @Value("${app.cookie-secure}")
     private boolean cookieSecure;
 
@@ -51,19 +52,25 @@ public class AuthController {
     public AuthController(PasswordEncoder passwordEncoder,
                           UserRepository userRepository,
                           JwtService jwtService,
-                          UserDetailsService userDetailsService, LoginLogRepository loginLogRepository) {
+                          LoginLogRepository loginLogRepository,
+                          CustomUserDetailsService customUserDetailsService) {
         this.passwordEncoder = passwordEncoder;
         this.userRepository = userRepository;
         this.jwtService = jwtService;
-        this.userDetailsService = userDetailsService;
         this.loginLogRepository = loginLogRepository;
+        this.customUserDetailsService = customUserDetailsService;
     }
 
     @PostMapping("/login")
     public ResponseEntity<Object> login(@RequestBody LoginRequest loginRequest,
                                         HttpServletRequest request,
                                         HttpServletResponse response) {
-        User user = userRepository.findByUsernameIgnoreCase(loginRequest.getUsername());
+        if (StringUtils.isBlank(loginRequest.getAreaCode()) || StringUtils.isBlank(
+                loginRequest.getPhoneNumber()) || StringUtils.isBlank(loginRequest.getPassword())) {
+            throw new BusinessException("Invalid input");
+        }
+        User user = userRepository.findByAreaCodeAndPhoneNumber(loginRequest.getAreaCode(),
+                loginRequest.getPhoneNumber());
 
         if (user == null) {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
@@ -71,7 +78,8 @@ public class AuthController {
         }
 
         LoginLog loginLog = new LoginLog();
-        loginLog.setUsername(user.getUsername());
+        loginLog.setAreaCode(user.getAreaCode());
+        loginLog.setPhoneNumber(user.getPhoneNumber());
         loginLog.setDisplayName(user.getDisplayName());
         loginLog.setUserId(user.getId());
         loginLog.setIpAddress(getClientIp(request));
@@ -83,10 +91,10 @@ public class AuthController {
             return ResponseEntity.status(HttpStatus.UNAUTHORIZED)
                     .body(Map.of("error", "Invalid username or password"));
         }
-        log.info("Login: " + user.getUsername());
-        UserDetails userDetails = userDetailsService.loadUserByUsername(user.getUsername());
-        Collection<? extends GrantedAuthority> authorities = userDetails.getAuthorities();
-        String token = jwtService.generateToken(loginRequest.getUsername(), authorities);
+        log.debug("Login: " + user.getAreaCode() + user.getAreaCode());
+        Set<GrantedAuthority> grantedAuthorities = customUserDetailsService.loadByPhone(user.getAreaCode(),
+                user.getPhoneNumber());
+        String token = jwtService.generateToken(user.getAreaCode(), user.getPhoneNumber(), grantedAuthorities);
 
         String displayName = URLEncoder.encode(user.getDisplayName(), StandardCharsets.UTF_8);
         List<Cookie> cookies = List.of(

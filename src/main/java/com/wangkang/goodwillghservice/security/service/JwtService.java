@@ -3,6 +3,8 @@ package com.wangkang.goodwillghservice.security.service;
 import com.auth0.jwt.JWT;
 import com.auth0.jwt.algorithms.Algorithm;
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.auth0.jwt.interfaces.DecodedJWT;
+import com.wangkang.goodwillghservice.security.entity.CustomAuthenticationToken;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.stereotype.Service;
@@ -19,19 +21,24 @@ public class JwtService {
     @Value("${JWT_SECRET:key}")
     private String secretKey;
 
-    public String generateToken(String username, Collection<? extends GrantedAuthority> grantedAuthorities) {
+    public String generateToken(String areaCode,
+                                String phoneNumber,
+                                Collection<? extends GrantedAuthority> grantedAuthorities) {
         List<String> authorityNameList = grantedAuthorities.stream().map(GrantedAuthority::getAuthority).toList();
         return JWT.create()
-                .withSubject(username)
+                .withClaim("areaCode", areaCode)
+                .withClaim("phoneNumber", phoneNumber)
                 .withClaim("permissions", authorityNameList)
                 .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION_MS))
                 .sign(Algorithm.HMAC256(secretKey));
     }
 
-    public String validateToken(String token) throws JWTVerificationException {
-        return JWT.require(Algorithm.HMAC256(secretKey))
+    public CustomAuthenticationToken validateToken(String token) throws JWTVerificationException {
+        DecodedJWT decodedJWT = JWT.require(Algorithm.HMAC256(secretKey))
                 .build()
-                .verify(token)
-                .getSubject();
+                .verify(token);
+        String areaCode = decodedJWT.getClaim("areaCode").asString();
+        String phoneNumber = decodedJWT.getClaim("phoneNumber").asString();
+        return new CustomAuthenticationToken(areaCode, phoneNumber);
     }
 }

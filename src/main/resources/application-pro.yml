@@ -1,4 +1,7 @@
 app:
   cookie-secure: true
   init:
-    password: ${INIT_PASSWORD}
+    admin:
+      areaCode: ${ADMIN_AREA_CODE}
+      phoneNumber: ${ADMIN_PHONE_NUMBER}
+      password: ${ADMIN_PASSWORD}

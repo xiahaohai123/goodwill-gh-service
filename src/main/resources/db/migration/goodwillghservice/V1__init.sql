@@ -1,23 +1,25 @@
 -- 创建 schema
 CREATE SCHEMA IF NOT EXISTS public AUTHORIZATION pg_database_owner;
 
--- permission_group 表
-CREATE TABLE IF NOT EXISTS  permission_group
+-- permission_group 表（角色）
+CREATE TABLE IF NOT EXISTS permission_group
 (
-    id          UUID PRIMARY KEY,
-    name        TEXT    NOT NULL UNIQUE,
-    permissions JSONB   NOT NULL,
+    id          UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    name        TEXT NOT NULL UNIQUE,
+    permissions JSONB NOT NULL DEFAULT '[]'::jsonb,
     build_in    BOOLEAN NOT NULL DEFAULT FALSE
-);
+    );
 
--- tbl_user 表
-CREATE TABLE IF NOT EXISTS  tbl_user
+-- tbl_user 表（手机号作为账号）
+CREATE TABLE IF NOT EXISTS tbl_user
 (
-    id           UUID PRIMARY KEY,
-    username     TEXT NOT NULL UNIQUE,
+    id           UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+    phone_number TEXT NOT NULL,
+    area_code    TEXT NOT NULL,
     display_name TEXT NOT NULL,
     password     TEXT NOT NULL,
-    build_in    BOOLEAN NOT NULL DEFAULT FALSE
+    build_in     BOOLEAN NOT NULL DEFAULT FALSE,
+    UNIQUE(phone_number, area_code)
 );
 
 -- 用户与权限组关系表
@@ -28,3 +30,12 @@ CREATE TABLE IF NOT EXISTS  user_permission_group
     PRIMARY KEY (user_id, group_id)
 );
 
+-- 初始化角色（权限先为空）
+INSERT INTO permission_group (name, permissions, build_in)
+VALUES
+    ('ADMIN', '[]'::jsonb, TRUE),
+    ('USER', '[]'::jsonb, TRUE),
+    ('TILER', '[]'::jsonb, TRUE),
+    ('DEALER', '[]'::jsonb, TRUE),
+    ('MANAGER', '[]'::jsonb, TRUE)
+    ON CONFLICT (name) DO NOTHING;
