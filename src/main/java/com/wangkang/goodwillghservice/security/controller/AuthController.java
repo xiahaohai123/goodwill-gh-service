@@ -7,6 +7,7 @@ import com.wangkang.goodwillghservice.dao.goodwillghservice.security.model.User;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.repository.UserRepository;
 import com.wangkang.goodwillghservice.exception.BusinessException;
 import com.wangkang.goodwillghservice.locale.MessageService;
+import com.wangkang.goodwillghservice.security.entity.CustomUserDetails;
 import com.wangkang.goodwillghservice.security.entity.LoginRequest;
 import com.wangkang.goodwillghservice.security.service.CustomUserDetailsService;
 import com.wangkang.goodwillghservice.security.service.JwtService;
@@ -97,8 +98,9 @@ public class AuthController {
                     .body(Map.of("error", messageService.getMessage("Auth.credentials.bad")));
         }
         log.debug("Login: " + user.getAreaCode() + user.getAreaCode());
-        Set<GrantedAuthority> grantedAuthorities = customUserDetailsService.loadByPhone(user.getAreaCode(),
+        CustomUserDetails customUserDetails = customUserDetailsService.loadByPhone(user.getAreaCode(),
                 user.getPhoneNumber());
+        Set<GrantedAuthority> grantedAuthorities = customUserDetails.getGrantedAuthorities();
         String token = jwtService.generateToken(user.getAreaCode(), user.getPhoneNumber(), grantedAuthorities);
 
         String displayName = URLEncoder.encode(user.getDisplayName(), StandardCharsets.UTF_8);

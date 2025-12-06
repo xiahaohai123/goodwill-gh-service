@@ -2,6 +2,7 @@ package com.wangkang.goodwillghservice.security.filter;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
 import com.wangkang.goodwillghservice.security.entity.CustomAuthenticationToken;
+import com.wangkang.goodwillghservice.security.entity.CustomUserDetails;
 import com.wangkang.goodwillghservice.security.service.CustomUserDetailsService;
 import com.wangkang.goodwillghservice.security.service.JwtService;
 import jakarta.servlet.FilterChain;
@@ -47,9 +48,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         }
         try {
             CustomAuthenticationToken customAuthenticationToken = jwtService.validateToken(token);
-            Set<GrantedAuthority> grantedAuthorities = customUserDetailsService.loadByCustomAuthenticationToken(
+            CustomUserDetails customUserDetails = customUserDetailsService.loadByCustomAuthenticationToken(
                     customAuthenticationToken);
-            Authentication auth = new CustomAuthenticationToken(grantedAuthorities,
+            Set<GrantedAuthority> grantedAuthorities = customUserDetails.getGrantedAuthorities();
+            Authentication auth = new CustomAuthenticationToken(grantedAuthorities, customUserDetails.getUserId(),
                     customAuthenticationToken.getAreaCode(), customAuthenticationToken.getPhoneNumber());
             SecurityContextHolder.getContext().setAuthentication(auth);
             filterChain.doFilter(request, response);

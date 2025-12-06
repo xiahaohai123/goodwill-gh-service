@@ -1,33 +1,44 @@
 package com.wangkang.goodwillghservice.feature.user;
 
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wangkang.goodwillghservice.audit.entity.ActionType;
 import com.wangkang.goodwillghservice.audit.entity.Auditable;
 import com.wangkang.goodwillghservice.core.RedisService;
+import com.wangkang.goodwillghservice.locale.MessageService;
 import com.wangkang.goodwillghservice.security.BuiltInPermissionGroup;
+import com.wangkang.goodwillghservice.security.entity.CustomAuthenticationToken;
+import com.wangkang.goodwillghservice.util.JacksonUtils;
+import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.data.redis.core.RedisTemplate;
 import org.springframework.data.redis.core.ValueOperations;
+import org.springframework.security.core.Authentication;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.security.SecureRandom;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.UUID;
 import java.util.concurrent.TimeUnit;
 
 @Service
 public class InvitationServiceImpl implements InvitationService {
 
     private final RedisService redisService;
+    private final MessageService messageService;
     @Value("${invitation.valid.days:7}")
     private Integer invitationDefaultValidDays = 7;
 
     private final ValueOperations<String, Object> redisOps4Value;
 
     @Autowired
-    public InvitationServiceImpl(RedisTemplate<String, Object> redisTemplate, RedisService redisService) {
+    public InvitationServiceImpl(RedisTemplate<String, Object> redisTemplate, RedisService redisService,
+                                 MessageService messageService) {
         redisOps4Value = redisTemplate.opsForValue();
         this.redisService = redisService;
+        this.messageService = messageService;
     }
 
     /**
@@ -41,6 +52,10 @@ public class InvitationServiceImpl implements InvitationService {
         Invitation invitation = new Invitation();
         invitation.setCode(invitationCode);
         invitation.setRole(BuiltInPermissionGroup.MANAGER);
+        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
+        CustomAuthenticationToken customAuthenticationToken = (CustomAuthenticationToken) authentication;
+        UUID currentUserId = UUID.fromString(customAuthenticationToken.getPrincipal().toString());
+        invitation.setInviterId(currentUserId);
         invitation.setExpireAt(OffsetDateTime.now(ZoneOffset.UTC).plusDays(invitationDefaultValidDays));
 
         String key = redisService.buildKey("invitation", invitationCode);
@@ -52,6 +67,24 @@ public class InvitationServiceImpl implements InvitationService {
                 TimeUnit.DAYS
         );
 
+        return invitation;
+    }
+
+    @Override
+    public Invitation validateInvitation(String invitationCode) {
+        if (StringUtils.isBlank(invitationCode)) {
+            throw new IllegalArgumentException(messageService.getMessage("invitation.error.blank"));
+        }
+
+        String key = redisService.buildKey("invitation", invitationCode);
+        ObjectMapper objectMapper = JacksonUtils.getObjectMapper();
+        Invitation invitation = objectMapper.convertValue(redisOps4Value.get(key), Invitation.class);
+
+        if (invitation == null) {
+            throw new IllegalArgumentException(messageService.getMessage("invitation.error.invalid"));
+        }
+
+        redisService.delete(key);
         return invitation;
     }
 

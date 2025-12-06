@@ -4,10 +4,11 @@ import com.wangkang.goodwillghservice.dao.goodwillghservice.security.model.Permi
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.model.PermissionGroup;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.model.User;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.repository.UserRepository;
-import com.wangkang.goodwillghservice.exception.BusinessException;
+import com.wangkang.goodwillghservice.exception.I18nBusinessException;
 import com.wangkang.goodwillghservice.security.BuiltInPermissionGroup;
 import com.wangkang.goodwillghservice.security.UserNotFoundException;
 import com.wangkang.goodwillghservice.security.entity.CustomAuthenticationToken;
+import com.wangkang.goodwillghservice.security.entity.CustomUserDetails;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.authority.SimpleGrantedAuthority;
@@ -26,16 +27,16 @@ public class CustomUserDetailsService {
         this.userRepository = userRepository;
     }
 
-    public Set<GrantedAuthority> loadByCustomAuthenticationToken(CustomAuthenticationToken customAuthenticationToken) {
+    public CustomUserDetails loadByCustomAuthenticationToken(CustomAuthenticationToken customAuthenticationToken) {
         if (customAuthenticationToken == null || StringUtils.isBlank(
                 customAuthenticationToken.getAreaCode()) || StringUtils.isBlank(
                 customAuthenticationToken.getPhoneNumber())) {
-            throw new BusinessException("Invalid token");
+            throw new I18nBusinessException("token.invalid");
         }
         return loadByPhone(customAuthenticationToken.getAreaCode(), customAuthenticationToken.getPhoneNumber());
     }
 
-    public Set<GrantedAuthority> loadByPhone(String areaCode, String phoneNumber) throws UserNotFoundException {
+    public CustomUserDetails loadByPhone(String areaCode, String phoneNumber) throws UserNotFoundException {
         User user = userRepository.findByAreaCodeAndPhoneNumber(areaCode, phoneNumber);
         if (user == null) {
             throw new UserNotFoundException("User not exists");
@@ -64,7 +65,7 @@ public class CustomUserDetailsService {
                     .map(SimpleGrantedAuthority::new)
                     .collect(Collectors.toSet());
         }
-        return authorities;
+        return new CustomUserDetails(user.getId(), areaCode, phoneNumber, authorities);
     }
 
 }

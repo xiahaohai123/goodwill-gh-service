@@ -6,6 +6,7 @@ import org.springframework.util.Assert;
 
 import java.util.Collection;
 import java.util.Objects;
+import java.util.UUID;
 
 public class CustomAuthenticationToken extends AbstractAuthenticationToken {
     private final transient Object principal;
@@ -22,12 +23,13 @@ public class CustomAuthenticationToken extends AbstractAuthenticationToken {
     }
 
     public CustomAuthenticationToken(Collection<? extends GrantedAuthority> authorities,
+                                     UUID userId,
                                      String areaCode,
                                      String phoneNumber) {
         super(authorities);
         this.areaCode = areaCode;
         this.phoneNumber = phoneNumber;
-        this.principal = null;
+        this.principal = userId;
         super.setAuthenticated(true);
     }
 

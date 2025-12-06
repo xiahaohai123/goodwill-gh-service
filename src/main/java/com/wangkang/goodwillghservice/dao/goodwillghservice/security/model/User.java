@@ -49,7 +49,7 @@ public class User {
     private String bannedReason;
 
     @Column(name = "deleted", nullable = false)
-    private Boolean deleted;
+    private Boolean deleted = false;
     @Column(name = "deleted_at")
     private OffsetDateTime deletedAt;
     @Column(name = "deleted_reason")

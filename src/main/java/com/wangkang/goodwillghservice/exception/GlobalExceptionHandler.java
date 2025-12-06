@@ -1,8 +1,10 @@
 package com.wangkang.goodwillghservice.exception;
 
+import com.wangkang.goodwillghservice.locale.MessageService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.ResponseStatus;
@@ -15,6 +17,11 @@ import java.util.Map;
 public class GlobalExceptionHandler {
 
     private static final Log log = LogFactory.getLog(GlobalExceptionHandler.class);
+    private final MessageService messageService;
+
+    public GlobalExceptionHandler(MessageService messageService) {
+        this.messageService = messageService;
+    }
 
     @ExceptionHandler(Exception.class)
     @ResponseStatus(HttpStatus.BAD_REQUEST)
@@ -36,4 +43,15 @@ public class GlobalExceptionHandler {
         return errors;
     }
 
+    @ExceptionHandler(I18nBusinessException.class)
+    public ResponseEntity<Object> handleBusinessException(I18nBusinessException ex) {
+        String message = messageService.getMessage(
+                ex.getCode(),
+                ex.getArgs()
+        );
+
+        return ResponseEntity.badRequest().body(Map.of(
+                "error", message
+        ));
+    }
 }
