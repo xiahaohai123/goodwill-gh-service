@@ -71,7 +71,7 @@ public class AuthController {
         if (StringUtils.isBlank(loginRequest.getAreaCode()) || StringUtils.isBlank(
                 loginRequest.getPhoneNumber()) || StringUtils.isBlank(loginRequest.getPassword())) {
             String message = messageService.getMessage(
-                    "Required.parameters.blank" + " areaCode, phoneNumber, password");
+                    "Required.parameters.blank") + ": areaCode, phoneNumber, password";
             throw new BusinessException(message);
         }
         User user = userRepository.findByAreaCodeAndPhoneNumber(loginRequest.getAreaCode(),
