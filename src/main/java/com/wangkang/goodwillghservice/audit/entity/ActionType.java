@@ -1,16 +1,8 @@
 package com.wangkang.goodwillghservice.audit.entity;
 
 public enum ActionType {
-    EXPORT("Export"),
     CONFIG("Config"),
-    TRUCK_DISPATCH("Truck Dispatch"),
-    VEHICLE_LOG("Vehicle Log"),
-    SALE_ORDER("Sale Order"),
-    SALE("Sale"),
-    BI("Business Intelligence"),
-    OTHER_DATA("Other Data"),
-    PRODUCT("Product"),
-    SEA_FREIGHT("Sea freight"),
+    USER("User"),
     ;
 
     ActionType(String value) {
