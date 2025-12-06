@@ -40,7 +40,7 @@ public class InvitationServiceImpl implements InvitationService {
         String invitationCode = generateCode();
         Invitation invitation = new Invitation();
         invitation.setCode(invitationCode);
-        invitation.setRole(BuiltInPermissionGroup.MANAGER.name());
+        invitation.setRole(BuiltInPermissionGroup.MANAGER);
         invitation.setExpireAt(OffsetDateTime.now(ZoneOffset.UTC).plusDays(invitationDefaultValidDays));
 
         String key = redisService.buildKey("invitation", invitationCode);

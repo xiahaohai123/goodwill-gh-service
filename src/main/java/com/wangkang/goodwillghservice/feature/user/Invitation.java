@@ -1,11 +1,13 @@
 package com.wangkang.goodwillghservice.feature.user;
 
+import com.wangkang.goodwillghservice.security.BuiltInPermissionGroup;
+
 import java.time.OffsetDateTime;
 
 /** 用户邀请函 */
 public class Invitation {
     private String code;
-    private String role;
+    private BuiltInPermissionGroup role;
     private OffsetDateTime expireAt;
 
     public String getCode() {
@@ -16,11 +18,11 @@ public class Invitation {
         this.code = code;
     }
 
-    public String getRole() {
+    public BuiltInPermissionGroup getRole() {
         return role;
     }
 
-    public void setRole(String role) {
+    public void setRole(BuiltInPermissionGroup role) {
         this.role = role;
     }
 
