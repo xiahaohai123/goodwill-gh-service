@@ -19,6 +19,17 @@ CREATE TABLE IF NOT EXISTS tbl_user
     display_name TEXT NOT NULL,
     password     TEXT NOT NULL,
     build_in     BOOLEAN NOT NULL DEFAULT FALSE,
+
+    inviter_id      UUID,
+    created_at      TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    banned_until    TIMESTAMPTZ,
+    banned_reason   TEXT,
+
+    deleted         BOOLEAN NOT NULL DEFAULT FALSE,
+    deleted_at      TIMESTAMPTZ,
+    deleted_reason  TEXT,
+
     UNIQUE(phone_number, area_code)
 );
 
@@ -39,3 +50,32 @@ VALUES
     ('DEALER', '[]'::jsonb, TRUE),
     ('MANAGER', '[]'::jsonb, TRUE)
     ON CONFLICT (name) DO NOTHING;
+
+-- ADMIN：只有 ADMIN 权限
+UPDATE permission_group
+SET permissions = '["ADMIN"]'::jsonb
+WHERE name = 'ADMIN';
+
+-- USER：无权限
+UPDATE permission_group
+SET permissions = '["USER_SELF_QUERY","USER_SELF_MODIFY"]'::jsonb
+WHERE name = 'USER';
+
+-- TILER：无权限
+UPDATE permission_group
+SET permissions = '[]'::jsonb
+WHERE name = 'TILER';
+
+-- DEALER：邀请贴砖工 + 提交购买记录
+UPDATE permission_group
+SET permissions = '["INVITE_TILER", "PURCHASE_RECORD_SUBMIT"]'::jsonb
+WHERE name = 'DEALER';
+
+-- MANAGER：除 ADMIN、提交购买记录之外的所有权限
+UPDATE permission_group
+SET permissions = '[
+  "INVITE_MANAGER",
+  "INVITE_DEALER",
+  "INVITE_TILER"
+]'::jsonb
+WHERE name = 'MANAGER';

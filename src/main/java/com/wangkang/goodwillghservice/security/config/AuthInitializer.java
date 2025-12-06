@@ -52,6 +52,7 @@ public class AuthInitializer {
             admin.setPassword(passwordEncoder.encode(initPassword));
             admin.setBuildIn(true);
             admin.setGroups(Set.of(adminGroup, userGroup));
+            admin.setDeleted(false);
             userRepository.save(admin);
             log.info("Initialized account for admin: admin/" + initPassword);
         }

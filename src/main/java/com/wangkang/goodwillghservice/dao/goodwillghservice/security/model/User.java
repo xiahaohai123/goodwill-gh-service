@@ -1,9 +1,11 @@
 package com.wangkang.goodwillghservice.dao.goodwillghservice.security.model;
 
 import jakarta.persistence.*;
+import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 
+import java.time.OffsetDateTime;
 import java.util.Set;
 import java.util.UUID;
 
@@ -33,6 +35,25 @@ public class User {
 
     @Column(name = "build_in", nullable = false)
     private Boolean buildIn = false;
+
+    @Column(name = "inviter_id")
+    private UUID inviterId;
+
+    @CreationTimestamp
+    @Column(name = "created_at", nullable = false, updatable = false)
+    private OffsetDateTime createdAt;
+
+    @Column(name = "banned_until")
+    private OffsetDateTime bannedUntil;
+    @Column(name = "banned_reason")
+    private String bannedReason;
+
+    @Column(name = "deleted", nullable = false)
+    private Boolean deleted;
+    @Column(name = "deleted_at")
+    private OffsetDateTime deletedAt;
+    @Column(name = "deleted_reason")
+    private String deletedReason;
 
     public UUID getId() {
         return id;
@@ -88,5 +109,61 @@ public class User {
 
     public void setBuildIn(Boolean buildIn) {
         this.buildIn = buildIn;
+    }
+
+    public UUID getInviterId() {
+        return inviterId;
+    }
+
+    public void setInviterId(UUID inviterId) {
+        this.inviterId = inviterId;
+    }
+
+    public OffsetDateTime getCreatedAt() {
+        return createdAt;
+    }
+
+    public void setCreatedAt(OffsetDateTime createdAt) {
+        this.createdAt = createdAt;
+    }
+
+    public OffsetDateTime getBannedUntil() {
+        return bannedUntil;
+    }
+
+    public void setBannedUntil(OffsetDateTime bannedUntil) {
+        this.bannedUntil = bannedUntil;
+    }
+
+    public String getBannedReason() {
+        return bannedReason;
+    }
+
+    public void setBannedReason(String bannedReason) {
+        this.bannedReason = bannedReason;
+    }
+
+    public Boolean getDeleted() {
+        return deleted;
+    }
+
+    public void setDeleted(Boolean deleted) {
+        this.deleted = deleted;
+    }
+
+    public OffsetDateTime getDeletedAt() {
+        return deletedAt;
+    }
+
+    public void setDeletedAt(OffsetDateTime deletedAt) {
+        this.deletedAt = deletedAt;
+    }
+
+    public String getDeletedReason() {
+        return deletedReason;
+    }
+
+    public void setDeletedReason(String deletedReason) {
+        this.deletedReason = deletedReason;
     }
 }
