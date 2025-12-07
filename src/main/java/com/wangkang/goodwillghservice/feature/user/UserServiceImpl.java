@@ -6,7 +6,7 @@ import com.wangkang.goodwillghservice.dao.goodwillghservice.security.repository.
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.repository.UserRepository;
 import com.wangkang.goodwillghservice.exception.I18nBusinessException;
 import com.wangkang.goodwillghservice.security.BuiltInPermissionGroup;
-import com.wangkang.goodwillghservice.util.BizAssert;
+import com.wangkang.goodwillghservice.share.util.BizAssert;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.BeanUtils;
 import org.springframework.beans.factory.annotation.Autowired;

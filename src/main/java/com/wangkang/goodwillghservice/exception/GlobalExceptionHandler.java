@@ -1,6 +1,6 @@
 package com.wangkang.goodwillghservice.exception;
 
-import com.wangkang.goodwillghservice.locale.MessageService;
+import com.wangkang.goodwillghservice.share.locale.MessageService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.http.HttpStatus;

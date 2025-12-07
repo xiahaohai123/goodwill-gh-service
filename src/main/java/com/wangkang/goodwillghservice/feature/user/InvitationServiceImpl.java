@@ -1,13 +1,13 @@
 package com.wangkang.goodwillghservice.feature.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
-import com.wangkang.goodwillghservice.audit.entity.ActionType;
-import com.wangkang.goodwillghservice.audit.entity.Auditable;
+import com.wangkang.goodwillghservice.feature.audit.entity.ActionType;
+import com.wangkang.goodwillghservice.feature.audit.entity.Auditable;
 import com.wangkang.goodwillghservice.core.RedisService;
-import com.wangkang.goodwillghservice.locale.MessageService;
+import com.wangkang.goodwillghservice.share.locale.MessageService;
 import com.wangkang.goodwillghservice.security.BuiltInPermissionGroup;
 import com.wangkang.goodwillghservice.security.entity.CustomAuthenticationToken;
-import com.wangkang.goodwillghservice.util.JacksonUtils;
+import com.wangkang.goodwillghservice.share.util.JacksonUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.beans.factory.annotation.Value;

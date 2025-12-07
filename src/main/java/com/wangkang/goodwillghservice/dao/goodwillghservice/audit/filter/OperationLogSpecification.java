@@ -1,6 +1,6 @@
 package com.wangkang.goodwillghservice.dao.goodwillghservice.audit.filter;
 
-import com.wangkang.goodwillghservice.audit.entity.OperationLogFilterDTO;
+import com.wangkang.goodwillghservice.feature.audit.entity.OperationLogFilterDTO;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.audit.model.OperationLog;
 import jakarta.persistence.criteria.Predicate;
 import org.springframework.data.jpa.domain.Specification;
