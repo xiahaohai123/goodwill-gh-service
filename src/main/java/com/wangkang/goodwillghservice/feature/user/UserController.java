@@ -28,6 +28,20 @@ public class UserController {
         return ResponseEntity.ok(invitation);
     }
 
+    @PostMapping("/invitation/dealer")
+    @PreAuthorize("hasAnyAuthority('INVITE_DEALER')")
+    public ResponseEntity<Object> generateInviteCode4Dealer() {
+        Invitation invitation = invitationService.generateInvitation4Dealer();
+        return ResponseEntity.ok(invitation);
+    }
+
+    @PostMapping("/invitation/tiler")
+    @PreAuthorize("hasAnyAuthority('INVITE_TILER')")
+    public ResponseEntity<Object> generateInviteCode4Tiler() {
+        Invitation invitation = invitationService.generateInvitation4Tiler();
+        return ResponseEntity.ok(invitation);
+    }
+
     @PostMapping("/register")
     public ResponseEntity<Object> register(@Valid @RequestBody RegisterDTO registerDTO) {
         // 一阶段，核实邀请码后注册

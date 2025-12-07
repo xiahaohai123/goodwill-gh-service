@@ -12,10 +12,27 @@ public interface InvitationService {
     /**
      * 为内部管理员创建邀请码，在现实中，内部管理员一般为销售，
      * 本方法返回的邀请码只可以用于创建内部管理员账号，且只能创建一个账号
-     * 邀请码要可以被核销
+     * 邀请码使用后会被废除
      * @return 邀请码
      */
     Invitation generateInvitation4Manager();
+
+
+    /**
+     * 为经销商创建邀请码
+     * 本方法返回的邀请码只可以用于创建经销商账号，且只能创建一个账号
+     * 邀请码使用后会被废除
+     * @return 邀请码
+     */
+    Invitation generateInvitation4Dealer();
+
+    /**
+     * 为贴砖工创建邀请码
+     * 本方法返回的邀请码只可以用于创建贴砖工账号，且只能创建一个账号
+     * 邀请码使用后会被废除
+     * @return 邀请码
+     */
+    Invitation generateInvitation4Tiler();
 
     /**
      * 验证邀请码，验证通过会返回邀请函对象，否则抛出异常，附带错误信息

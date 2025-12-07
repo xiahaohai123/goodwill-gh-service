@@ -48,10 +48,31 @@ public class InvitationServiceImpl implements InvitationService {
     @Auditable(actionType = ActionType.USER, actionName = "Generate invitation for manager")
     @Override
     public Invitation generateInvitation4Manager() {
+        return generateInvitation4Role(BuiltInPermissionGroup.MANAGER);
+    }
+
+    @Auditable(actionType = ActionType.USER, actionName = "Generate invitation for dealer")
+    @Override
+    public Invitation generateInvitation4Dealer() {
+        return generateInvitation4Role(BuiltInPermissionGroup.DEALER);
+    }
+
+    @Auditable(actionType = ActionType.USER, actionName = "Generate invitation for tiler")
+    @Override
+    public Invitation generateInvitation4Tiler() {
+        return generateInvitation4Role(BuiltInPermissionGroup.TILER);
+    }
+
+    /**
+     * 为某个角色创建邀请函，邀请信息会被存入 Redis，以 TTL 为期限，超时算过期
+     * @param role 角色
+     * @return 邀请函
+     */
+    private Invitation generateInvitation4Role(BuiltInPermissionGroup role) {
         String invitationCode = generateCode();
         Invitation invitation = new Invitation();
         invitation.setCode(invitationCode);
-        invitation.setRole(BuiltInPermissionGroup.MANAGER);
+        invitation.setRole(role);
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         CustomAuthenticationToken customAuthenticationToken = (CustomAuthenticationToken) authentication;
         UUID currentUserId = UUID.fromString(customAuthenticationToken.getPrincipal().toString());
@@ -66,7 +87,6 @@ public class InvitationServiceImpl implements InvitationService {
                 invitationDefaultValidDays,
                 TimeUnit.DAYS
         );
-
         return invitation;
     }
 
