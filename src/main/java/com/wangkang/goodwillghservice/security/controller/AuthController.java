@@ -5,7 +5,7 @@ import com.wangkang.goodwillghservice.dao.goodwillghservice.audit.model.LoginLog
 import com.wangkang.goodwillghservice.dao.goodwillghservice.audit.repository.LoginLogRepository;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.model.User;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.repository.UserRepository;
-import com.wangkang.goodwillghservice.exception.BusinessException;
+import com.wangkang.goodwillghservice.core.exception.BusinessException;
 import com.wangkang.goodwillghservice.share.locale.MessageService;
 import com.wangkang.goodwillghservice.security.entity.CustomUserDetails;
 import com.wangkang.goodwillghservice.security.entity.LoginRequest;

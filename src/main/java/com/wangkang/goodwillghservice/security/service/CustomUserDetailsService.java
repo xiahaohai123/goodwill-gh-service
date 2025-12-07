@@ -4,7 +4,7 @@ import com.wangkang.goodwillghservice.dao.goodwillghservice.security.model.Permi
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.model.PermissionGroup;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.model.User;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.repository.UserRepository;
-import com.wangkang.goodwillghservice.exception.I18nBusinessException;
+import com.wangkang.goodwillghservice.core.exception.I18nBusinessException;
 import com.wangkang.goodwillghservice.security.BuiltInPermissionGroup;
 import com.wangkang.goodwillghservice.security.UserNotFoundException;
 import com.wangkang.goodwillghservice.security.entity.CustomAuthenticationToken;

@@ -1,4 +1,4 @@
-package com.wangkang.goodwillghservice.exception;
+package com.wangkang.goodwillghservice.core.exception;
 
 public class BusinessException extends RuntimeException {
     public BusinessException(String message) {

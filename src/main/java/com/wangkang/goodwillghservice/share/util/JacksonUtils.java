@@ -8,7 +8,7 @@ import com.fasterxml.jackson.datatype.hibernate6.Hibernate6Module;
 import com.fasterxml.jackson.datatype.jdk8.Jdk8Module;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.fasterxml.jackson.module.paramnames.ParameterNamesModule;
-import com.wangkang.goodwillghservice.exception.BusinessException;
+import com.wangkang.goodwillghservice.core.exception.BusinessException;
 
 import java.util.Collection;
 import java.util.List;

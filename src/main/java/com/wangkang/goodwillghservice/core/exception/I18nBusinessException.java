@@ -1,4 +1,4 @@
-package com.wangkang.goodwillghservice.exception;
+package com.wangkang.goodwillghservice.core.exception;
 
 public class I18nBusinessException extends RuntimeException {
     private final String code;      // i18n key，如 "user.phone.required"

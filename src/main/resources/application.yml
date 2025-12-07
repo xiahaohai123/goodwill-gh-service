@@ -39,3 +39,12 @@ spring:
 invitation:
   valid:
     days: ${INVITATION_VALID_DAYS:7}
+
+sms:
+  # 是否开启短信验证
+  enable: true
+  africastalking:
+    # 短信运营商配置，非洲地区，默认是沙盒环境
+    apiKey: ${SMS_AFRICA_TALKING_API_KEY:atsk_f7eae2a826d77cfa40fc513e0babb7ee2f39e64dc791d3d0a2c4818dc642c87e5e6a7f9d}
+    username: ${SMS_AFRICA_TALKING_USERNAME:sandbox}
+    host: ${SMS_AFRICA_TALKING_HOST:api.sandbox.africastalking.com}

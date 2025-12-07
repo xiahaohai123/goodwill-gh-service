@@ -1,6 +1,6 @@
 package com.wangkang.goodwillghservice.dao.goodwillghservice.audit.model;
 
-import com.wangkang.goodwillghservice.exception.BusinessException;
+import com.wangkang.goodwillghservice.core.exception.BusinessException;
 import com.wangkang.goodwillghservice.share.util.JacksonUtils;
 import jakarta.persistence.AttributeConverter;
 import jakarta.persistence.Converter;

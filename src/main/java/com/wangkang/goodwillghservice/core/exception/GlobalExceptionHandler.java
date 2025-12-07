@@ -1,4 +1,4 @@
-package com.wangkang.goodwillghservice.exception;
+package com.wangkang.goodwillghservice.core.exception;
 
 import com.wangkang.goodwillghservice.share.locale.MessageService;
 import org.apache.commons.logging.Log;

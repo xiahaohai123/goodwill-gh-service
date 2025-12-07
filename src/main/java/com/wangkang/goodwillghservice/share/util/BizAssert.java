@@ -1,6 +1,6 @@
 package com.wangkang.goodwillghservice.share.util;
 
-import com.wangkang.goodwillghservice.exception.I18nBusinessException;
+import com.wangkang.goodwillghservice.core.exception.I18nBusinessException;
 import org.apache.commons.lang3.StringUtils;
 
 public class BizAssert {

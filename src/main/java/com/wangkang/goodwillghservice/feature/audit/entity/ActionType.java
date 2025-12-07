@@ -3,6 +3,7 @@ package com.wangkang.goodwillghservice.feature.audit.entity;
 public enum ActionType {
     CONFIG("Config"),
     USER("User"),
+    SMS("SMS"),
     ;
 
     ActionType(String value) {
