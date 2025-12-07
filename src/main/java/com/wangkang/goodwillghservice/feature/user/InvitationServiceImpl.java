@@ -1,12 +1,12 @@
 package com.wangkang.goodwillghservice.feature.user;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import com.wangkang.goodwillghservice.core.RedisService;
 import com.wangkang.goodwillghservice.feature.audit.entity.ActionType;
 import com.wangkang.goodwillghservice.feature.audit.entity.Auditable;
-import com.wangkang.goodwillghservice.core.RedisService;
-import com.wangkang.goodwillghservice.share.locale.MessageService;
 import com.wangkang.goodwillghservice.security.BuiltInPermissionGroup;
 import com.wangkang.goodwillghservice.security.entity.CustomAuthenticationToken;
+import com.wangkang.goodwillghservice.share.locale.MessageService;
 import com.wangkang.goodwillghservice.share.util.JacksonUtils;
 import org.apache.commons.lang3.StringUtils;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -32,6 +32,9 @@ public class InvitationServiceImpl implements InvitationService {
     private Integer invitationDefaultValidDays = 7;
 
     private final ValueOperations<String, Object> redisOps4Value;
+
+    private static final String KEY_PREFIX_INVITATION = "invitation";
+
 
     @Autowired
     public InvitationServiceImpl(RedisTemplate<String, Object> redisTemplate, RedisService redisService,
@@ -79,7 +82,7 @@ public class InvitationServiceImpl implements InvitationService {
         invitation.setInviterId(currentUserId);
         invitation.setExpireAt(OffsetDateTime.now(ZoneOffset.UTC).plusDays(invitationDefaultValidDays));
 
-        String key = redisService.buildKey("invitation", invitationCode);
+        String key = redisService.buildKey(KEY_PREFIX_INVITATION, invitationCode);
         // 3. 存储到 Redis，设置 TTL
         redisOps4Value.set(
                 key,
@@ -96,7 +99,7 @@ public class InvitationServiceImpl implements InvitationService {
             throw new IllegalArgumentException(messageService.getMessage("invitation.error.blank"));
         }
 
-        String key = redisService.buildKey("invitation", invitationCode);
+        String key = redisService.buildKey(KEY_PREFIX_INVITATION, invitationCode);
         ObjectMapper objectMapper = JacksonUtils.getObjectMapper();
         Invitation invitation = objectMapper.convertValue(redisOps4Value.get(key), Invitation.class);
 
@@ -104,8 +107,14 @@ public class InvitationServiceImpl implements InvitationService {
             throw new IllegalArgumentException(messageService.getMessage("invitation.error.invalid"));
         }
 
-        redisService.delete(key);
+
         return invitation;
+    }
+
+    @Override
+    public void invalidInvitation(String invitationCode) {
+        String key = redisService.buildKey(KEY_PREFIX_INVITATION, invitationCode);
+        redisService.delete(key);
     }
 
     private String generateCode() {

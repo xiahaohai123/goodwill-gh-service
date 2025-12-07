@@ -27,6 +27,12 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     private final JwtService jwtService;
     private final CustomUserDetailsService customUserDetailsService;
 
+    private static final Set<String> WHITE_LIST = Set.of(
+            "/api/download",
+            "/api/auth/login",
+            "/api/user/register"
+    );
+
     public JwtAuthenticationFilter(JwtService jwtService,
                                    CustomUserDetailsService customUserDetailsService) {
         this.jwtService = jwtService;
@@ -84,8 +90,6 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
     protected boolean shouldNotFilter(HttpServletRequest request) {
         String path = request.getRequestURI();
         // 如果是登录接口，跳过本过滤器
-        if ("/api/download".equals(path)) {
-            return true;
-        } else return "/api/auth/login".equals(path);
+        return WHITE_LIST.contains(path);
     }
 }

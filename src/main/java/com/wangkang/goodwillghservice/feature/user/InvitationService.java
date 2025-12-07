@@ -36,10 +36,15 @@ public interface InvitationService {
 
     /**
      * 验证邀请码，验证通过会返回邀请函对象，否则抛出异常，附带错误信息
-     * 验证后，邀请码会立即失效
      * 邀请函会包含邀请函附带信息，例如这封邀请函可以用来注册什么角色
      * @param invitationCode 邀请码
      * @return 邀请函
      */
     Invitation validateInvitation(String invitationCode);
+
+    /**
+     * 使邀请码失效
+     * @param invitationCode 邀请码
+     */
+    void invalidInvitation(String invitationCode);
 }

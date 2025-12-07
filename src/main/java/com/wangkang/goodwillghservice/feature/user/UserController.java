@@ -51,6 +51,7 @@ public class UserController {
         BeanUtils.copyProperties(registerDTO, userDTO);
         BeanUtils.copyProperties(invitation, userDTO);
         UserDTO resultUser = userService.registerUser(userDTO);
+        invitationService.invalidInvitation(invitationCode);
         return ResponseEntity.ok(resultUser);
         // TODO 二阶段，核实手机号后注册
     }
