@@ -23,11 +23,14 @@ public class JwtService {
 
     public String generateToken(String areaCode,
                                 String phoneNumber,
+                                Collection<String> roles,
                                 Collection<? extends GrantedAuthority> grantedAuthorities) {
         List<String> authorityNameList = grantedAuthorities.stream().map(GrantedAuthority::getAuthority).toList();
+        List<String> roleList = roles.stream().toList();
         return JWT.create()
                 .withClaim("areaCode", areaCode)
                 .withClaim("phoneNumber", phoneNumber)
+                .withClaim("roles", roleList)
                 .withClaim("permissions", authorityNameList)
                 .withExpiresAt(new Date(System.currentTimeMillis() + EXPIRATION_MS))
                 .sign(Algorithm.HMAC256(secretKey));

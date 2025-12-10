@@ -1,16 +1,17 @@
 package com.wangkang.goodwillghservice.security.controller;
 
-import com.wangkang.goodwillghservice.feature.audit.entity.TaskStatus;
+import com.wangkang.goodwillghservice.core.exception.BusinessException;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.audit.model.LoginLog;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.audit.repository.LoginLogRepository;
+import com.wangkang.goodwillghservice.dao.goodwillghservice.security.model.PermissionGroup;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.model.User;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.repository.UserRepository;
-import com.wangkang.goodwillghservice.core.exception.BusinessException;
-import com.wangkang.goodwillghservice.share.locale.MessageService;
+import com.wangkang.goodwillghservice.feature.audit.entity.TaskStatus;
 import com.wangkang.goodwillghservice.security.entity.CustomUserDetails;
 import com.wangkang.goodwillghservice.security.entity.LoginRequest;
 import com.wangkang.goodwillghservice.security.service.CustomUserDetailsService;
 import com.wangkang.goodwillghservice.security.service.JwtService;
+import com.wangkang.goodwillghservice.share.locale.MessageService;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
@@ -101,7 +102,9 @@ public class AuthController {
         CustomUserDetails customUserDetails = customUserDetailsService.loadByPhone(user.getAreaCode(),
                 user.getPhoneNumber());
         Set<GrantedAuthority> grantedAuthorities = customUserDetails.getGrantedAuthorities();
-        String token = jwtService.generateToken(user.getAreaCode(), user.getPhoneNumber(), grantedAuthorities);
+        List<String> groupNameList = user.getGroups().stream().map(PermissionGroup::getName).toList();
+        String token = jwtService.generateToken(user.getAreaCode(), user.getPhoneNumber(), groupNameList,
+                grantedAuthorities);
 
         String displayName = URLEncoder.encode(user.getDisplayName(), StandardCharsets.UTF_8);
         List<Cookie> cookies = List.of(
