@@ -4,10 +4,7 @@ import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 @RestController
 @RequestMapping("/api/user")
@@ -28,10 +25,10 @@ public class UserController {
         return ResponseEntity.ok(invitation);
     }
 
-    @PostMapping("/invitation/dealer")
-    @PreAuthorize("hasAnyAuthority('INVITE_DEALER')")
-    public ResponseEntity<Object> generateInviteCode4Dealer() {
-        Invitation invitation = invitationService.generateInvitation4Dealer();
+    @PostMapping("/invitation/distributor")
+    @PreAuthorize("hasAnyAuthority('INVITE_DISTRIBUTOR')")
+    public ResponseEntity<Object> generateInviteCode4Distributor() {
+        Invitation invitation = invitationService.generateInvitation4Distributor();
         return ResponseEntity.ok(invitation);
     }
 
@@ -50,10 +47,10 @@ public class UserController {
         UserDTO userDTO = new UserDTO();
         BeanUtils.copyProperties(registerDTO, userDTO);
         BeanUtils.copyProperties(invitation, userDTO);
+        userDTO.addRole(invitation.getRole());
         UserDTO resultUser = userService.registerUser(userDTO);
         invitationService.invalidInvitation(invitationCode);
         return ResponseEntity.ok(resultUser);
         // TODO 二阶段，核实手机号后注册
     }
-
 }

@@ -47,7 +47,7 @@ VALUES
     ('ADMIN', '[]'::jsonb, TRUE),
     ('USER', '[]'::jsonb, TRUE),
     ('TILER', '[]'::jsonb, TRUE),
-    ('DEALER', '[]'::jsonb, TRUE),
+    ('DISTRIBUTOR', '[]'::jsonb, TRUE),
     ('MANAGER', '[]'::jsonb, TRUE)
     ON CONFLICT (name) DO NOTHING;
 
@@ -57,15 +57,15 @@ UPDATE permission_group
 SET permissions = '["USER_SELF_QUERY","USER_SELF_MODIFY"]'::jsonb
 WHERE name = 'USER';
 
--- DEALER：邀请贴砖工 + 提交购买记录
+-- DISTRIBUTOR：邀请贴砖工 + 提交购买记录
 UPDATE permission_group
 SET permissions = '["INVITE_TILER", "PURCHASE_RECORD_SUBMIT"]'::jsonb
-WHERE name = 'DEALER';
+WHERE name = 'DISTRIBUTOR';
 
 -- MANAGER：邀请经销商和贴砖工
 UPDATE permission_group
 SET permissions = '[
-  "INVITE_DEALER",
+  "INVITE_DISTRIBUTOR",
   "INVITE_TILER"
 ]'::jsonb
 WHERE name = 'MANAGER';

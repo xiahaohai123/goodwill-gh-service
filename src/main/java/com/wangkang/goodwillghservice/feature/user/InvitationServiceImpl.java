@@ -54,10 +54,10 @@ public class InvitationServiceImpl implements InvitationService {
         return generateInvitation4Role(BuiltInPermissionGroup.MANAGER);
     }
 
-    @Auditable(actionType = ActionType.USER, actionName = "Generate invitation for dealer")
+    @Auditable(actionType = ActionType.USER, actionName = "Generate invitation for distributor")
     @Override
-    public Invitation generateInvitation4Dealer() {
-        return generateInvitation4Role(BuiltInPermissionGroup.DEALER);
+    public Invitation generateInvitation4Distributor() {
+        return generateInvitation4Role(BuiltInPermissionGroup.DISTRIBUTOR);
     }
 
     @Auditable(actionType = ActionType.USER, actionName = "Generate invitation for tiler")

@@ -24,7 +24,7 @@ public interface InvitationService {
      * 邀请码使用后会被废除
      * @return 邀请码
      */
-    Invitation generateInvitation4Dealer();
+    Invitation generateInvitation4Distributor();
 
     /**
      * 为贴砖工创建邀请码

@@ -10,9 +10,13 @@ public enum Permission {
     /** 邀请内部管理 */
     INVITE_MANAGER,
     /** 邀请经销商 */
-    INVITE_DEALER,
+    INVITE_DISTRIBUTOR,
     /** 邀请贴砖工 */
     INVITE_TILER,
     /** 提交购买记录 */
-    PURCHASE_RECORD_SUBMIT;
+    PURCHASE_RECORD_SUBMIT,
+    /** 经销商查询 */
+    DISTRIBUTOR_QUERY,
+    /** 调试权限，有一些调试型接口 */
+    DEBUG;
 }

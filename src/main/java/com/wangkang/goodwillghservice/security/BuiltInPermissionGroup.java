@@ -8,7 +8,7 @@ public enum BuiltInPermissionGroup {
     /** 贴砖工 */
     TILER,
     /** 经销商 */
-    DEALER,
+    DISTRIBUTOR,
     /** 普通管理员，内部人员使用 */
     MANAGER;
 }
