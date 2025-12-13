@@ -11,4 +11,5 @@ import java.util.UUID;
 public interface DistributorExternalInfoRepository extends JpaRepository<DistributorExternalInfo, UUID>,
         JpaSpecificationExecutor<DistributorExternalInfo> {
 
+    DistributorExternalInfo findByExternalId(Integer externalId);
 }

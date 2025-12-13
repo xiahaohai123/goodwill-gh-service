@@ -1,23 +1,26 @@
 package com.wangkang.goodwillghservice.feature.user.distributor;
 
+import com.wangkang.goodwillghservice.core.exception.I18nBusinessException;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.distributor.model.DistributorExternalInfo;
+import com.wangkang.goodwillghservice.dao.goodwillghservice.distributor.model.DistributorProfile;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.distributor.repository.DistributorExternalInfoRepository;
+import com.wangkang.goodwillghservice.dao.goodwillghservice.distributor.repository.DistributorProfileRepository;
+import com.wangkang.goodwillghservice.dao.goodwillghservice.security.model.PermissionGroup;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.model.User;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.repository.UserRepository;
 import com.wangkang.goodwillghservice.feature.audit.entity.ActionType;
 import com.wangkang.goodwillghservice.feature.audit.entity.Auditable;
 import com.wangkang.goodwillghservice.feature.k3cloud.model.customer.Customer;
 import com.wangkang.goodwillghservice.feature.k3cloud.service.K3cloudCustomerService;
-import com.wangkang.goodwillghservice.feature.user.UserDTO;
 import com.wangkang.goodwillghservice.security.BuiltInPermissionGroup;
+import com.wangkang.goodwillghservice.share.util.BizAssert;
 import com.wangkang.goodwillghservice.share.util.DateUtil;
+import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -27,23 +30,42 @@ public class DistributorServiceImpl implements DistributorService {
     private final UserRepository userRepository;
     private final DistributorExternalInfoRepository distributorExternalInfoRepository;
     private final K3cloudCustomerService k3cloudCustomerService;
+    private final DistributorProfileRepository distributorProfileRepository;
 
     public DistributorServiceImpl(UserRepository userRepository,
                                   DistributorExternalInfoRepository distributorExternalInfoRepository,
-                                  K3cloudCustomerService k3cloudCustomerService) {
+                                  K3cloudCustomerService k3cloudCustomerService,
+                                  DistributorProfileRepository distributorProfileRepository) {
         this.userRepository = userRepository;
         this.distributorExternalInfoRepository = distributorExternalInfoRepository;
         this.k3cloudCustomerService = k3cloudCustomerService;
+        this.distributorProfileRepository = distributorProfileRepository;
     }
 
     @Override
-    public List<UserDTO> getDistributors() {
+    public List<DistributorDTO> getDistributors() {
         List<User> distinctByGroupsName = userRepository.findDistinctByGroups_Name(
                 BuiltInPermissionGroup.DISTRIBUTOR.name());
         return distinctByGroupsName.stream().map(user -> {
-            UserDTO userDTO = new UserDTO();
-            BeanUtils.copyProperties(user, userDTO);
-            return userDTO;
+            DistributorDTO dto = new DistributorDTO();
+            BeanUtils.copyProperties(user, dto);
+            Set<BuiltInPermissionGroup> roles = user.getGroups()
+                    .stream()
+                    .map(PermissionGroup::getName)
+                    .map(BuiltInPermissionGroup::valueOf)
+                    .collect(Collectors.toSet());
+            dto.setRoles(roles);
+            return dto;
+        }).toList();
+    }
+
+    @Override
+    public List<DistributorExternalInfoDTO> getDistributorsExternalList() {
+        List<DistributorExternalInfo> infos = distributorExternalInfoRepository.findAll();
+        return infos.stream().map(externalInfo -> {
+            DistributorExternalInfoDTO distributorExternalInfoDTO = new DistributorExternalInfoDTO();
+            BeanUtils.copyProperties(externalInfo, distributorExternalInfoDTO);
+            return distributorExternalInfoDTO;
         }).toList();
     }
 
@@ -89,5 +111,28 @@ public class DistributorServiceImpl implements DistributorService {
         }
 
         distributorExternalInfoRepository.saveAll(toSave);
+    }
+
+    @Auditable(actionType = ActionType.DISTRIBUTOR, actionName = "Bind external distributor")
+    @Transactional
+    @Override
+    public void bindDistributor2External(UUID userId, UUID externalId) {
+        User user = userRepository.findByIdAndGroups_Name(userId, BuiltInPermissionGroup.DISTRIBUTOR.name());
+        BizAssert.notNull(user, "distributor.notFound");
+        boolean userAlreadyBound = distributorProfileRepository.existsByUser(user);
+        if (userAlreadyBound) {
+            throw new I18nBusinessException("distributor.alreadyBound");
+        }
+        DistributorExternalInfo externalDistributor = distributorExternalInfoRepository.findById(externalId)
+                .orElseThrow(() -> new I18nBusinessException("distributor.external.notFound"));
+        boolean externalDistributorAlreadyBound = distributorProfileRepository.existsByExternalDistributor(
+                externalDistributor);
+        if (externalDistributorAlreadyBound) {
+            throw new I18nBusinessException("distributor.external.alreadyBound");
+        }
+        DistributorProfile profile = new DistributorProfile();
+        profile.setUser(user);
+        profile.setExternalDistributor(externalDistributor);
+        distributorProfileRepository.save(profile);
     }
 }

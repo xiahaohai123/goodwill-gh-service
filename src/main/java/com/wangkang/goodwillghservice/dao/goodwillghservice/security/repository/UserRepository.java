@@ -23,4 +23,6 @@ public interface UserRepository extends JpaRepository<User, UUID>,
 
     // 返回不重复的用户
     List<User> findDistinctByGroups_Name(String groupName);
+
+    User findByIdAndGroups_Name(UUID id, String groupName);
 }

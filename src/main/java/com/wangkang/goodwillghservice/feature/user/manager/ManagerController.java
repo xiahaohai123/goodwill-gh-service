@@ -3,14 +3,13 @@ package com.wangkang.goodwillghservice.feature.user.manager;
 
 import com.wangkang.goodwillghservice.feature.k3cloud.model.customer.Customer;
 import com.wangkang.goodwillghservice.feature.k3cloud.service.K3cloudCustomerService;
-import com.wangkang.goodwillghservice.feature.user.UserDTO;
+import com.wangkang.goodwillghservice.feature.user.distributor.DistributorDTO;
+import com.wangkang.goodwillghservice.feature.user.distributor.DistributorExternalInfoDTO;
 import com.wangkang.goodwillghservice.feature.user.distributor.DistributorService;
+import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
-import org.springframework.web.bind.annotation.GetMapping;
-import org.springframework.web.bind.annotation.PutMapping;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 
@@ -26,9 +25,10 @@ public class ManagerController {
         this.k3cloudCustomerService = k3cloudCustomerService;
     }
 
+    @PreAuthorize("hasAuthority('DISTRIBUTOR_QUERY')")
     @GetMapping("/list/distributor")
     public ResponseEntity<Object> getDistributorList() {
-        List<UserDTO> distributors = distributorService.getDistributors();
+        List<DistributorDTO> distributors = distributorService.getDistributors();
         return ResponseEntity.ok(distributors);
     }
 
@@ -37,6 +37,13 @@ public class ManagerController {
     public ResponseEntity<Object> updateDistributorExternal() {
         distributorService.updateDistributorExternal();
         return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasAuthority('DISTRIBUTOR_QUERY')")
+    @GetMapping("/list/distributor/external")
+    public ResponseEntity<Object> getDistributorExternalList() {
+        List<DistributorExternalInfoDTO> distributorsExternalList = distributorService.getDistributorsExternalList();
+        return ResponseEntity.ok(distributorsExternalList);
     }
 
     /**
@@ -48,5 +55,12 @@ public class ManagerController {
     public ResponseEntity<Object> updateDistributorExternalK3cloud() {
         List<Customer> customerList = k3cloudCustomerService.getCustomerList();
         return ResponseEntity.ok(customerList);
+    }
+
+    @PreAuthorize("hasAnyAuthority('DISTRIBUTOR_MODIFY')")
+    @PutMapping("/distributor/bind")
+    public ResponseEntity<Object> bindDistributor(@Valid @RequestBody BindDistributorDTO bindDistributorDTO) {
+        distributorService.bindDistributor2External(bindDistributorDTO.getUserId(), bindDistributorDTO.getExternalId());
+        return ResponseEntity.noContent().build();
     }
 }
