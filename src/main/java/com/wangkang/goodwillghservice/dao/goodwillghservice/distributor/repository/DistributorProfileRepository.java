@@ -16,4 +16,6 @@ public interface DistributorProfileRepository extends JpaRepository<DistributorP
     boolean existsByUser(User user);
 
     boolean existsByExternalDistributor(DistributorExternalInfo externalInfo);
+
+    DistributorProfile findByUser(User user);
 }

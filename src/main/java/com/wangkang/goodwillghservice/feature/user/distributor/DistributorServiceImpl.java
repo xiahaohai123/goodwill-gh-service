@@ -135,4 +135,14 @@ public class DistributorServiceImpl implements DistributorService {
         profile.setExternalDistributor(externalDistributor);
         distributorProfileRepository.save(profile);
     }
+
+    @Transactional
+    @Override
+    public void unbindDistributor2External(UUID userId) {
+        User user = userRepository.findById(userId)
+                .orElseThrow(() -> new I18nBusinessException("distributor.notFound"));
+        DistributorProfile profile = distributorProfileRepository.findByUser((user));
+        BizAssert.notNull(profile, "distributor.notBound");
+        distributorProfileRepository.delete(profile);
+    }
 }

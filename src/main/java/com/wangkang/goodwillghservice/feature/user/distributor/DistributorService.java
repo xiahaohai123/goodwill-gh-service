@@ -32,4 +32,12 @@ public interface DistributorService {
      */
     void bindDistributor2External(UUID userId, UUID externalId);
 
+
+    /**
+     * 解除经销商用户到外部经销商的绑定关系
+     * 会让用户进入未认证的状态
+     * @param userId 系统内用户 ID
+     */
+    void unbindDistributor2External(UUID userId);
+
 }

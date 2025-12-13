@@ -6,12 +6,14 @@ import com.wangkang.goodwillghservice.feature.k3cloud.service.K3cloudCustomerSer
 import com.wangkang.goodwillghservice.feature.user.distributor.DistributorDTO;
 import com.wangkang.goodwillghservice.feature.user.distributor.DistributorExternalInfoDTO;
 import com.wangkang.goodwillghservice.feature.user.distributor.DistributorService;
+import com.wangkang.goodwillghservice.share.util.BizAssert;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
+import java.util.UUID;
 
 @RestController
 @RequestMapping("/api/manager")
@@ -61,6 +63,15 @@ public class ManagerController {
     @PutMapping("/distributor/bind")
     public ResponseEntity<Object> bindDistributor(@Valid @RequestBody BindDistributorDTO bindDistributorDTO) {
         distributorService.bindDistributor2External(bindDistributorDTO.getUserId(), bindDistributorDTO.getExternalId());
+        return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasAnyAuthority('DISTRIBUTOR_MODIFY')")
+    @DeleteMapping("/distributor/bind")
+    public ResponseEntity<Object> unbindDistributor2External(@RequestBody BindDistributorDTO bindDistributorDTO) {
+        UUID userId = bindDistributorDTO.getUserId();
+        BizAssert.notNull(userId, "user.null");
+        distributorService.unbindDistributor2External(userId);
         return ResponseEntity.noContent().build();
     }
 }
