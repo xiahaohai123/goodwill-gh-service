@@ -16,7 +16,7 @@ public class DistributorExternalInfo {
     @JdbcType(value = UUIDJdbcType.class)
     private UUID id;
     @Column(name = "external_id", nullable = false)
-    private String externalId;
+    private Integer externalId;
     @Column(name = "external_name", nullable = false)
     private String externalName;
     @Column(name = "external_code")
@@ -32,11 +32,11 @@ public class DistributorExternalInfo {
         this.id = id;
     }
 
-    public String getExternalId() {
+    public Integer getExternalId() {
         return externalId;
     }
 
-    public void setExternalId(String externalId) {
+    public void setExternalId(Integer externalId) {
         this.externalId = externalId;
     }
 

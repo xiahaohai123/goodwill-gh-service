@@ -32,9 +32,11 @@ public class ManagerController {
         return ResponseEntity.ok(distributors);
     }
 
+    @PreAuthorize("hasAnyAuthority('DISTRIBUTOR_MODIFY')")
     @PutMapping("/distributor/external")
     public ResponseEntity<Object> updateDistributorExternal() {
-        return null;
+        distributorService.updateDistributorExternal();
+        return ResponseEntity.noContent().build();
     }
 
     /**

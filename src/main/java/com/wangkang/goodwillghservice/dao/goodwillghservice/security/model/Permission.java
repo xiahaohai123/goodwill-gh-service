@@ -17,6 +17,8 @@ public enum Permission {
     PURCHASE_RECORD_SUBMIT,
     /** 经销商查询 */
     DISTRIBUTOR_QUERY,
+    /** 經銷商數據更新 */
+    DISTRIBUTOR_MODIFY,
     /** 调试权限，有一些调试型接口 */
     DEBUG;
 }

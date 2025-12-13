@@ -3,9 +3,18 @@ package com.wangkang.goodwillghservice.feature.k3cloud.model.customer;
 
 public class Customer {
 
+    private Integer customerId;
     private String name;
     private String code;
     private String type;
+
+    public Integer getCustomerId() {
+        return customerId;
+    }
+
+    public void setCustomerId(Integer customerId) {
+        this.customerId = customerId;
+    }
 
     public String getName() {
         return name;

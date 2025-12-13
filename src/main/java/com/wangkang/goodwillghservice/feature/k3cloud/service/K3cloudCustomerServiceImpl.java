@@ -26,6 +26,7 @@ public class K3cloudCustomerServiceImpl implements K3cloudCustomerService {
         List<Customer> resultList = new ArrayList<>();
         for (Map<String, Object> objMap : customerListMap) {
             Customer customer = new Customer();
+            customer.setCustomerId(ChoreUtil.toInteger(objMap.get("FCUSTID")));
             customer.setCode(ChoreUtil.toString(objMap.get("FNumber")));
             customer.setName(ChoreUtil.toString(objMap.get("FName")));
             customer.setType(ChoreUtil.toString(objMap.get("FCustTypeId.FDataValue")));

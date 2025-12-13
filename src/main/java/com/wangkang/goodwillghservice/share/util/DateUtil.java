@@ -60,6 +60,14 @@ public class DateUtil {
         return Instant.now().toString();
     }
 
+    /**
+     * 获取 UTC 时区的当前时间
+     * @return 时间信息
+     */
+    public static OffsetDateTime currentDateTimeUTC() {
+        return OffsetDateTime.now(ZoneOffset.UTC);
+    }
+
     public static String parseDateStr2Iso(String dateStr) {
         LocalDate date = LocalDate.parse(dateStr, DATE_PARSER);
         LocalDateTime dateTime = date.atStartOfDay();
