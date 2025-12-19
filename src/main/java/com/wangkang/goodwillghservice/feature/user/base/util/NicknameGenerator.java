@@ -1,4 +1,4 @@
-package com.wangkang.goodwillghservice.feature.user;
+package com.wangkang.goodwillghservice.feature.user.base.util;
 
 import java.security.SecureRandom;
 

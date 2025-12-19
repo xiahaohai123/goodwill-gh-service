@@ -1,5 +1,6 @@
-package com.wangkang.goodwillghservice.feature.user;
+package com.wangkang.goodwillghservice.feature.user.base.entity;
 
+import com.wangkang.goodwillghservice.feature.user.base.util.StrongPassword;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Pattern;
 
@@ -14,6 +15,7 @@ public class RegisterDTO {
     private String phoneNumber;
     /** 密码 */
     @NotBlank
+    @StrongPassword
     private String password;
     /** 邀请码 */
     @NotBlank

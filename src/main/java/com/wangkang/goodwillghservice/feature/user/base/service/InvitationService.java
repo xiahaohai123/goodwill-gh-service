@@ -1,5 +1,6 @@
-package com.wangkang.goodwillghservice.feature.user;
+package com.wangkang.goodwillghservice.feature.user.base.service;
 
+import com.wangkang.goodwillghservice.feature.user.base.entity.Invitation;
 import org.springframework.stereotype.Service;
 
 /**

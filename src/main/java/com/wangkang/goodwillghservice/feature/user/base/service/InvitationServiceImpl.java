@@ -1,9 +1,10 @@
-package com.wangkang.goodwillghservice.feature.user;
+package com.wangkang.goodwillghservice.feature.user.base.service;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wangkang.goodwillghservice.core.RedisService;
 import com.wangkang.goodwillghservice.feature.audit.entity.ActionType;
 import com.wangkang.goodwillghservice.feature.audit.entity.Auditable;
+import com.wangkang.goodwillghservice.feature.user.base.entity.Invitation;
 import com.wangkang.goodwillghservice.security.BuiltInPermissionGroup;
 import com.wangkang.goodwillghservice.security.entity.CustomAuthenticationToken;
 import com.wangkang.goodwillghservice.share.locale.MessageService;

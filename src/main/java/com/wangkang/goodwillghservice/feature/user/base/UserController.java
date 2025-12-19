@@ -1,10 +1,18 @@
-package com.wangkang.goodwillghservice.feature.user;
+package com.wangkang.goodwillghservice.feature.user.base;
 
+import com.wangkang.goodwillghservice.feature.user.base.entity.Invitation;
+import com.wangkang.goodwillghservice.feature.user.base.entity.PasswordUpdateDTO;
+import com.wangkang.goodwillghservice.feature.user.base.entity.RegisterDTO;
+import com.wangkang.goodwillghservice.feature.user.base.entity.UserDTO;
+import com.wangkang.goodwillghservice.feature.user.base.service.InvitationService;
+import com.wangkang.goodwillghservice.feature.user.base.service.UserService;
 import jakarta.validation.Valid;
 import org.springframework.beans.BeanUtils;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+
+import java.security.Principal;
 
 @RestController
 @RequestMapping("/api/user")
@@ -52,5 +60,11 @@ public class UserController {
         invitationService.invalidInvitation(invitationCode);
         return ResponseEntity.ok(resultUser);
         // TODO 二阶段，核实手机号后注册
+    }
+
+    @PutMapping("/password")
+    public ResponseEntity<Object> updatePassword(@Valid @RequestBody PasswordUpdateDTO dto, Principal principal) {
+        userService.updatePassword(dto, principal);
+        return ResponseEntity.noContent().build();
     }
 }

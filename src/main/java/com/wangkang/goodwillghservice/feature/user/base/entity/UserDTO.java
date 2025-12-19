@@ -1,6 +1,7 @@
-package com.wangkang.goodwillghservice.feature.user;
+package com.wangkang.goodwillghservice.feature.user.base.entity;
 
 import com.fasterxml.jackson.annotation.JsonInclude;
+import com.wangkang.goodwillghservice.feature.audit.entity.Sensitive;
 import com.wangkang.goodwillghservice.security.BuiltInPermissionGroup;
 
 import java.util.HashSet;
@@ -12,6 +13,7 @@ public class UserDTO {
     private String areaCode;
     private String phoneNumber;
     private String displayName;
+    @Sensitive
     private String password;
 
 
