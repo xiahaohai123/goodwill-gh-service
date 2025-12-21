@@ -1,5 +1,9 @@
 package com.wangkang.goodwillghservice.feature.user.distributor;
 
+
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+
 import java.util.List;
 import java.util.UUID;
 
@@ -9,7 +13,7 @@ public interface DistributorService {
      * 获取本系统内的经销商列表
      * @return 用户信息
      */
-    List<DistributorDTO> getDistributors();
+    Page<DistributorDTO> getDistributors(Pageable pageable);
 
     /**
      * 从金蝶云拉取经销商信息到本地

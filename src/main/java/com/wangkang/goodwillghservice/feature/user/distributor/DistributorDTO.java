@@ -1,11 +1,13 @@
 package com.wangkang.goodwillghservice.feature.user.distributor;
 
 import com.wangkang.goodwillghservice.security.BuiltInPermissionGroup;
+import org.springframework.hateoas.server.core.Relation;
 
 import java.util.HashSet;
 import java.util.Set;
 import java.util.UUID;
 
+@Relation(collectionRelation = "items", itemRelation = "item")
 public class DistributorDTO {
     private UUID id;
     private String areaCode;

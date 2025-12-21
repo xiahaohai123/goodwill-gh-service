@@ -8,12 +8,35 @@ CREATE TABLE IF NOT EXISTS distributor_external_info
     UNIQUE (external_id)
 );
 
-
-
 CREATE TABLE IF NOT EXISTS distributor_profile
 (
     id                      UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
-    user_id                 UUID        NOT NULL UNIQUE REFERENCES tbl_user (id) ON DELETE CASCADE,
+    user_id                 UUID        NOT NULL REFERENCES tbl_user (id) ON DELETE CASCADE,
     external_distributor_id UUID        NOT NULL REFERENCES distributor_external_info (id) ON DELETE RESTRICT,
-    bound_at                TIMESTAMPTZ NOT NULL DEFAULT NOW()
+    status                  TEXT        NOT NULL DEFAULT 'ACTIVE',
+    -- ACTIVE / SUSPENDED
+    bound_at                TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+    ended_at                TIMESTAMPTZ,
+
+    -- 一个用户在同一时间，只能有一个 ACTIVE 绑定
+    CONSTRAINT uq_user_active_binding
+        UNIQUE (user_id)
+            DEFERRABLE INITIALLY IMMEDIATE
+);
+
+CREATE TABLE IF NOT EXISTS distributor_profile_history
+(
+    id                      UUID PRIMARY KEY DEFAULT gen_random_uuid(),
+
+    distributor_profile_id  UUID,
+    user_id                 UUID        NOT NULL,
+    external_distributor_id UUID        NOT NULL,
+
+    action                  TEXT        NOT NULL,
+    -- BIND / SUSPEND / REBIND / SYSTEM_ROLLBACK
+
+    operated_by             UUID,        -- 管理员ID（可为空，系统操作）
+    operated_at             TIMESTAMPTZ NOT NULL DEFAULT NOW(),
+
+    reason                  TEXT
 );

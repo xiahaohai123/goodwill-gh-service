@@ -2,6 +2,8 @@ package com.wangkang.goodwillghservice.dao.goodwillghservice.security.repository
 
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.model.PermissionGroup;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.model.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.stereotype.Repository;
@@ -22,7 +24,7 @@ public interface UserRepository extends JpaRepository<User, UUID>,
     List<User> findUserByGroupsIn(Collection<Set<PermissionGroup>> groups);
 
     // 返回不重复的用户
-    List<User> findDistinctByGroups_Name(String groupName);
+    Page<User> findDistinctByGroups_Name(String groupName, Pageable pageable);
 
     User findByIdAndGroups_Name(UUID id, String groupName);
 }

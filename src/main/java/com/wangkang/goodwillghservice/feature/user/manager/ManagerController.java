@@ -8,6 +8,9 @@ import com.wangkang.goodwillghservice.feature.user.distributor.DistributorExtern
 import com.wangkang.goodwillghservice.feature.user.distributor.DistributorService;
 import com.wangkang.goodwillghservice.share.util.BizAssert;
 import jakarta.validation.Valid;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PagedResourcesAssembler;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
@@ -29,9 +32,10 @@ public class ManagerController {
 
     @PreAuthorize("hasAuthority('DISTRIBUTOR_QUERY')")
     @GetMapping("/list/distributor")
-    public ResponseEntity<Object> getDistributorList() {
-        List<DistributorDTO> distributors = distributorService.getDistributors();
-        return ResponseEntity.ok(distributors);
+    public ResponseEntity<Object> getDistributorList(Pageable pageable,
+                                                     PagedResourcesAssembler<DistributorDTO> assembler) {
+        Page<DistributorDTO> page = distributorService.getDistributors(pageable);
+        return ResponseEntity.ok(assembler.toModel(page));
     }
 
     @PreAuthorize("hasAnyAuthority('DISTRIBUTOR_MODIFY')")

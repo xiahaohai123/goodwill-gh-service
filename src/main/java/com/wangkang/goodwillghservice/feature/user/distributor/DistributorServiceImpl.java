@@ -17,6 +17,8 @@ import com.wangkang.goodwillghservice.share.util.BizAssert;
 import com.wangkang.goodwillghservice.share.util.DateUtil;
 import jakarta.transaction.Transactional;
 import org.springframework.beans.BeanUtils;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
@@ -43,20 +45,21 @@ public class DistributorServiceImpl implements DistributorService {
     }
 
     @Override
-    public List<DistributorDTO> getDistributors() {
-        List<User> distinctByGroupsName = userRepository.findDistinctByGroups_Name(
-                BuiltInPermissionGroup.DISTRIBUTOR.name());
-        return distinctByGroupsName.stream().map(user -> {
+    public Page<DistributorDTO> getDistributors(Pageable pageable) {
+        Page<User> page = userRepository.findDistinctByGroups_Name(BuiltInPermissionGroup.DISTRIBUTOR.name(), pageable);
+        return page.map(user -> {
             DistributorDTO dto = new DistributorDTO();
             BeanUtils.copyProperties(user, dto);
+
             Set<BuiltInPermissionGroup> roles = user.getGroups()
                     .stream()
                     .map(PermissionGroup::getName)
                     .map(BuiltInPermissionGroup::valueOf)
                     .collect(Collectors.toSet());
+
             dto.setRoles(roles);
             return dto;
-        }).toList();
+        });
     }
 
     @Override
