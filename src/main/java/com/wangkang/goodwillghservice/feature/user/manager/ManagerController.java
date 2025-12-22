@@ -53,6 +53,14 @@ public class ManagerController {
         return ResponseEntity.ok(assembler.toModel(page));
     }
 
+    @PreAuthorize("hasAuthority('DISTRIBUTOR_QUERY')")
+    @GetMapping("/list/distributor/external/unbound")
+    public ResponseEntity<Object> getUnboundDistributorExternalList(Pageable pageable,
+                                                             PagedResourcesAssembler<DistributorExternalInfoDTO> assembler) {
+        Page<DistributorExternalInfoDTO> page = distributorService.getUnboundDistributorsExternal(pageable);
+        return ResponseEntity.ok(assembler.toModel(page));
+    }
+
     /**
      * 直接从金蝶云取客户数据并返回，调试用接口
      * @return 客户数据

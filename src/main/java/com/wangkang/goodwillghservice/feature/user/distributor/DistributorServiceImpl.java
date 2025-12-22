@@ -15,7 +15,6 @@ import com.wangkang.goodwillghservice.security.BuiltInPermissionGroup;
 import com.wangkang.goodwillghservice.share.util.BizAssert;
 import com.wangkang.goodwillghservice.share.util.DateUtil;
 import jakarta.transaction.Transactional;
-import org.springframework.beans.BeanUtils;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
@@ -54,13 +53,12 @@ public class DistributorServiceImpl implements DistributorService {
     @Override
     public Page<DistributorExternalInfoDTO> getDistributorsExternalList(Pageable pageable) {
         // XH. 开头编号的客户是销号的客户，不予显示
-        Page<DistributorExternalInfo> page = distributorExternalInfoRepository.findAllByExternalCodeNotContainingIgnoreCase(
-                "XH.", pageable);
-        return page.map(info -> {
-            DistributorExternalInfoDTO distributorExternalInfoDTO = new DistributorExternalInfoDTO();
-            BeanUtils.copyProperties(info, distributorExternalInfoDTO);
-            return distributorExternalInfoDTO;
-        });
+        return distributorExternalInfoRepository.findExternalListExcluded("XH.", pageable);
+    }
+
+    @Override
+    public Page<DistributorExternalInfoDTO> getUnboundDistributorsExternal(Pageable pageable) {
+        return distributorExternalInfoRepository.findUnboundExternalListExcluded("XH.", pageable);
     }
 
     @Auditable(actionType = ActionType.DISTRIBUTOR, actionName = "Update external distributor")

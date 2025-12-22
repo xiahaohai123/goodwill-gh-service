@@ -11,6 +11,23 @@ public class DistributorExternalInfoDTO {
     private String externalName;
     private String externalCode;
     private OffsetDateTime syncedAt;
+    /** 如果已绑定，则携带绑定的用户展示名 */
+    private String userDisplayName;
+
+    public DistributorExternalInfoDTO() {
+    }
+
+    public DistributorExternalInfoDTO(UUID id,
+                                      String externalName,
+                                      String externalCode,
+                                      OffsetDateTime syncedAt,
+                                      String userDisplayName) {
+        this.id = id;
+        this.externalName = externalName;
+        this.externalCode = externalCode;
+        this.syncedAt = syncedAt;
+        this.userDisplayName = userDisplayName;
+    }
 
     public UUID getId() {
         return id;
@@ -42,5 +59,13 @@ public class DistributorExternalInfoDTO {
 
     public void setSyncedAt(OffsetDateTime syncedAt) {
         this.syncedAt = syncedAt;
+    }
+
+    public String getUserDisplayName() {
+        return userDisplayName;
+    }
+
+    public void setUserDisplayName(String userDisplayName) {
+        this.userDisplayName = userDisplayName;
     }
 }

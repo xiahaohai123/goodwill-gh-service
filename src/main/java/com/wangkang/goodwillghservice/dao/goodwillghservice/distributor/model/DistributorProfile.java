@@ -34,9 +34,16 @@ public class DistributorProfile {
     @JoinColumn(name = "external_distributor_id", nullable = false, updatable = false)
     private DistributorExternalInfo externalDistributor;
 
+    @Column(nullable = false)
+    @Enumerated(EnumType.STRING)
+    private Status status;
+
     @CreationTimestamp
     @Column(name = "bound_at", nullable = false, updatable = false)
     private OffsetDateTime boundAt;
+
+    @Column(name = "ended_at")
+    private OffsetDateTime endedAt;
 
     // ---------- getter / setter ----------
 
@@ -62,5 +69,29 @@ public class DistributorProfile {
 
     public OffsetDateTime getBoundAt() {
         return boundAt;
+    }
+
+    public void setId(UUID id) {
+        this.id = id;
+    }
+
+    public Status getStatus() {
+        return status;
+    }
+
+    public void setStatus(Status status) {
+        this.status = status;
+    }
+
+    public void setBoundAt(OffsetDateTime boundAt) {
+        this.boundAt = boundAt;
+    }
+
+    public OffsetDateTime getEndedAt() {
+        return endedAt;
+    }
+
+    public void setEndedAt(OffsetDateTime endAt) {
+        this.endedAt = endAt;
     }
 }

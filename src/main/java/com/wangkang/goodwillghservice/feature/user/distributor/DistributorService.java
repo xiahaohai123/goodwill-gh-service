@@ -27,6 +27,8 @@ public interface DistributorService {
      */
     Page<DistributorExternalInfoDTO> getDistributorsExternalList(Pageable pageable);
 
+    Page<DistributorExternalInfoDTO> getUnboundDistributorsExternal(Pageable pageable);
+
     /**
      * 绑定经销商用户到外部经销商
      * 该操作实际上是认证本系统内的用户真的是客户
