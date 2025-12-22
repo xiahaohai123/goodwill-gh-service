@@ -3,7 +3,10 @@ package com.wangkang.goodwillghservice.feature.user.distributor;
 import com.wangkang.goodwillghservice.core.exception.I18nBusinessException;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.distributor.model.DistributorExternalInfo;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.distributor.model.DistributorProfile;
+import com.wangkang.goodwillghservice.dao.goodwillghservice.distributor.model.DistributorProfileHistory;
+import com.wangkang.goodwillghservice.dao.goodwillghservice.distributor.model.Status;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.distributor.repository.DistributorExternalInfoRepository;
+import com.wangkang.goodwillghservice.dao.goodwillghservice.distributor.repository.DistributorProfileHistoryRepository;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.distributor.repository.DistributorProfileRepository;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.model.User;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.repository.UserRepository;
@@ -17,6 +20,7 @@ import com.wangkang.goodwillghservice.share.util.DateUtil;
 import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
@@ -34,15 +38,18 @@ public class DistributorServiceImpl implements DistributorService {
     private final DistributorExternalInfoRepository distributorExternalInfoRepository;
     private final K3cloudCustomerService k3cloudCustomerService;
     private final DistributorProfileRepository distributorProfileRepository;
+    private final DistributorProfileHistoryRepository distributorProfileHistoryRepository;
 
     public DistributorServiceImpl(UserRepository userRepository,
                                   DistributorExternalInfoRepository distributorExternalInfoRepository,
                                   K3cloudCustomerService k3cloudCustomerService,
-                                  DistributorProfileRepository distributorProfileRepository) {
+                                  DistributorProfileRepository distributorProfileRepository,
+                                  DistributorProfileHistoryRepository distributorProfileHistoryRepository) {
         this.userRepository = userRepository;
         this.distributorExternalInfoRepository = distributorExternalInfoRepository;
         this.k3cloudCustomerService = k3cloudCustomerService;
         this.distributorProfileRepository = distributorProfileRepository;
+        this.distributorProfileHistoryRepository = distributorProfileHistoryRepository;
     }
 
     @Override
@@ -125,7 +132,17 @@ public class DistributorServiceImpl implements DistributorService {
         DistributorProfile profile = new DistributorProfile();
         profile.setUser(user);
         profile.setExternalDistributor(externalDistributor);
-        distributorProfileRepository.save(profile);
+        profile.setStatus(Status.ACTIVE);
+        DistributorProfile savedProfile = distributorProfileRepository.save(profile);
+        DistributorProfileHistory history = new DistributorProfileHistory();
+        history.setUserId(user.getId());
+        history.setAction(Status.ACTIVE);
+        history.setExternalDistributorId(externalDistributor.getId());
+        history.setDistributorProfileId(savedProfile.getId());
+        UUID operatorId = UUID.fromString(
+                SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString());
+        history.setOperatedBy(operatorId);
+        distributorProfileHistoryRepository.save(history);
     }
 
     @Transactional
