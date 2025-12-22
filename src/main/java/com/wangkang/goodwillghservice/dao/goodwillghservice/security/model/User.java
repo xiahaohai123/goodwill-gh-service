@@ -1,5 +1,6 @@
 package com.wangkang.goodwillghservice.dao.goodwillghservice.security.model;
 
+import com.wangkang.goodwillghservice.dao.goodwillghservice.distributor.model.DistributorProfile;
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcType;
@@ -32,6 +33,9 @@ public class User {
             inverseJoinColumns = @JoinColumn(name = "group_id")
     )
     private Set<PermissionGroup> groups;
+
+    @OneToOne(mappedBy = "user", fetch = FetchType.LAZY)
+    private DistributorProfile distributorProfile;
 
     @Column(name = "build_in", nullable = false)
     private Boolean buildIn = false;
@@ -165,5 +169,13 @@ public class User {
 
     public void setDeletedReason(String deletedReason) {
         this.deletedReason = deletedReason;
+    }
+
+    public DistributorProfile getDistributorProfile() {
+        return distributorProfile;
+    }
+
+    public void setDistributorProfile(DistributorProfile distributorProfile) {
+        this.distributorProfile = distributorProfile;
     }
 }

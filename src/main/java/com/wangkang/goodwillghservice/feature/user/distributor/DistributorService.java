@@ -12,7 +12,7 @@ public interface DistributorService {
      * 获取本系统内的经销商列表
      * @return 用户信息
      */
-    Page<DistributorDTO> getDistributors(Pageable pageable);
+    Page<Distributor4ManagerDTO> getDistributors(Pageable pageable);
 
     /**
      * 从金蝶云拉取经销商信息到本地

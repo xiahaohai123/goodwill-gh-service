@@ -3,7 +3,7 @@ package com.wangkang.goodwillghservice.feature.user.manager;
 
 import com.wangkang.goodwillghservice.feature.k3cloud.model.customer.Customer;
 import com.wangkang.goodwillghservice.feature.k3cloud.service.K3cloudCustomerService;
-import com.wangkang.goodwillghservice.feature.user.distributor.DistributorDTO;
+import com.wangkang.goodwillghservice.feature.user.distributor.Distributor4ManagerDTO;
 import com.wangkang.goodwillghservice.feature.user.distributor.DistributorExternalInfoDTO;
 import com.wangkang.goodwillghservice.feature.user.distributor.DistributorService;
 import com.wangkang.goodwillghservice.share.util.BizAssert;
@@ -33,8 +33,8 @@ public class ManagerController {
     @PreAuthorize("hasAuthority('DISTRIBUTOR_QUERY')")
     @GetMapping("/list/distributor")
     public ResponseEntity<Object> getDistributorList(Pageable pageable,
-                                                     PagedResourcesAssembler<DistributorDTO> assembler) {
-        Page<DistributorDTO> page = distributorService.getDistributors(pageable);
+                                                     PagedResourcesAssembler<Distributor4ManagerDTO> assembler) {
+        Page<Distributor4ManagerDTO> page = distributorService.getDistributors(pageable);
         return ResponseEntity.ok(assembler.toModel(page));
     }
 

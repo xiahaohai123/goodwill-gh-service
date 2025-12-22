@@ -5,7 +5,6 @@ import com.wangkang.goodwillghservice.dao.goodwillghservice.distributor.model.Di
 import com.wangkang.goodwillghservice.dao.goodwillghservice.distributor.model.DistributorProfile;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.distributor.repository.DistributorExternalInfoRepository;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.distributor.repository.DistributorProfileRepository;
-import com.wangkang.goodwillghservice.dao.goodwillghservice.security.model.PermissionGroup;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.model.User;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.repository.UserRepository;
 import com.wangkang.goodwillghservice.feature.audit.entity.ActionType;
@@ -22,7 +21,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
-import java.util.*;
+import java.util.ArrayList;
+import java.util.List;
+import java.util.Map;
+import java.util.UUID;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -45,21 +47,8 @@ public class DistributorServiceImpl implements DistributorService {
     }
 
     @Override
-    public Page<DistributorDTO> getDistributors(Pageable pageable) {
-        Page<User> page = userRepository.findDistinctByGroups_Name(BuiltInPermissionGroup.DISTRIBUTOR.name(), pageable);
-        return page.map(user -> {
-            DistributorDTO dto = new DistributorDTO();
-            BeanUtils.copyProperties(user, dto);
-
-            Set<BuiltInPermissionGroup> roles = user.getGroups()
-                    .stream()
-                    .map(PermissionGroup::getName)
-                    .map(BuiltInPermissionGroup::valueOf)
-                    .collect(Collectors.toSet());
-
-            dto.setRoles(roles);
-            return dto;
-        });
+    public Page<Distributor4ManagerDTO> getDistributors(Pageable pageable) {
+        return userRepository.findDistributorWithExternalInfo(pageable);
     }
 
     @Override
