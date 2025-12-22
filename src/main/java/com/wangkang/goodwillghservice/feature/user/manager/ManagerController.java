@@ -47,9 +47,10 @@ public class ManagerController {
 
     @PreAuthorize("hasAuthority('DISTRIBUTOR_QUERY')")
     @GetMapping("/list/distributor/external")
-    public ResponseEntity<Object> getDistributorExternalList() {
-        List<DistributorExternalInfoDTO> distributorsExternalList = distributorService.getDistributorsExternalList();
-        return ResponseEntity.ok(distributorsExternalList);
+    public ResponseEntity<Object> getDistributorExternalList(Pageable pageable,
+                                                             PagedResourcesAssembler<DistributorExternalInfoDTO> assembler) {
+        Page<DistributorExternalInfoDTO> page = distributorService.getDistributorsExternalList(pageable);
+        return ResponseEntity.ok(assembler.toModel(page));
     }
 
     /**

@@ -4,7 +4,6 @@ package com.wangkang.goodwillghservice.feature.user.distributor;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.List;
 import java.util.UUID;
 
 public interface DistributorService {
@@ -26,7 +25,7 @@ public interface DistributorService {
      * 即金蝶云同步过来的客户列表
      * @return 经销商列表
      */
-    List<DistributorExternalInfoDTO> getDistributorsExternalList();
+    Page<DistributorExternalInfoDTO> getDistributorsExternalList(Pageable pageable);
 
     /**
      * 绑定经销商用户到外部经销商

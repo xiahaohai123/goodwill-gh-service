@@ -63,13 +63,15 @@ public class DistributorServiceImpl implements DistributorService {
     }
 
     @Override
-    public List<DistributorExternalInfoDTO> getDistributorsExternalList() {
-        List<DistributorExternalInfo> infos = distributorExternalInfoRepository.findAll();
-        return infos.stream().map(externalInfo -> {
+    public Page<DistributorExternalInfoDTO> getDistributorsExternalList(Pageable pageable) {
+        // XH. 开头编号的客户是销号的客户，不予显示
+        Page<DistributorExternalInfo> page = distributorExternalInfoRepository.findAllByExternalCodeNotContainingIgnoreCase(
+                "XH.", pageable);
+        return page.map(info -> {
             DistributorExternalInfoDTO distributorExternalInfoDTO = new DistributorExternalInfoDTO();
-            BeanUtils.copyProperties(externalInfo, distributorExternalInfoDTO);
+            BeanUtils.copyProperties(info, distributorExternalInfoDTO);
             return distributorExternalInfoDTO;
-        }).toList();
+        });
     }
 
     @Auditable(actionType = ActionType.DISTRIBUTOR, actionName = "Update external distributor")

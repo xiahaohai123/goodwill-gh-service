@@ -40,3 +40,11 @@ CREATE TABLE IF NOT EXISTS distributor_profile_history
 
     reason                  TEXT
 );
+
+-- 赋予 manager 查询经销商和修改经销商信息的权限
+UPDATE permission_group
+SET permissions = (
+    SELECT jsonb_agg(DISTINCT elem)
+    FROM jsonb_array_elements(permissions || '["DISTRIBUTOR_QUERY", "DISTRIBUTOR_MODIFY"]'::jsonb) AS t(elem)
+)
+WHERE name = 'MANAGER';

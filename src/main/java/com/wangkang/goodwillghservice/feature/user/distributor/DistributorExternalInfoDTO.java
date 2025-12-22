@@ -1,8 +1,11 @@
 package com.wangkang.goodwillghservice.feature.user.distributor;
 
+import org.springframework.hateoas.server.core.Relation;
+
 import java.time.OffsetDateTime;
 import java.util.UUID;
 
+@Relation(collectionRelation = "items", itemRelation = "item")
 public class DistributorExternalInfoDTO {
     private UUID id;
     private String externalName;
