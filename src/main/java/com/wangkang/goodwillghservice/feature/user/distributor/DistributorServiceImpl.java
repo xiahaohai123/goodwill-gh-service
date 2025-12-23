@@ -132,8 +132,8 @@ public class DistributorServiceImpl implements DistributorService {
         DistributorProfile profile = new DistributorProfile();
         profile.setUser(user);
         profile.setExternalDistributor(externalDistributor);
-        profile.setStatus(Status.ACTIVE);
         DistributorProfile savedProfile = distributorProfileRepository.save(profile);
+
         DistributorProfileHistory history = new DistributorProfileHistory();
         history.setUserId(user.getId());
         history.setAction(Status.ACTIVE);
@@ -145,13 +145,26 @@ public class DistributorServiceImpl implements DistributorService {
         distributorProfileHistoryRepository.save(history);
     }
 
-    @Transactional
+
     @Override
     public void unbindDistributor2External(UUID userId) {
         User user = userRepository.findById(userId)
                 .orElseThrow(() -> new I18nBusinessException("distributor.notFound"));
         DistributorProfile profile = distributorProfileRepository.findByUser((user));
         BizAssert.notNull(profile, "distributor.notBound");
-        distributorProfileRepository.delete(profile);
+        // 获取需要保存到 history 的信息
+        UUID profileId = profile.getId();
+
+        UUID externalDistributorId = profile.getExternalDistributor().getId();
+        DistributorProfileHistory history = new DistributorProfileHistory();
+        history.setUserId(user.getId());
+        history.setAction(Status.SUSPENDED);
+        history.setExternalDistributorId(externalDistributorId);
+        history.setDistributorProfileId(profileId);
+        UUID operatorId = UUID.fromString(
+                SecurityContextHolder.getContext().getAuthentication().getPrincipal().toString());
+        history.setOperatedBy(operatorId);
+        distributorProfileHistoryRepository.save(history);
+        distributorProfileRepository.deleteById(profileId);
     }
 }

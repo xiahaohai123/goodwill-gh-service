@@ -13,10 +13,7 @@ CREATE TABLE IF NOT EXISTS distributor_profile
     id                      UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
     user_id                 UUID        NOT NULL REFERENCES tbl_user (id) ON DELETE CASCADE,
     external_distributor_id UUID        NOT NULL REFERENCES distributor_external_info (id) ON DELETE RESTRICT,
-    status                  TEXT        NOT NULL DEFAULT 'ACTIVE',
-    -- ACTIVE / SUSPENDED
     bound_at                TIMESTAMPTZ NOT NULL DEFAULT NOW(),
-    ended_at                TIMESTAMPTZ,
 
     -- 一个用户在同一时间，只能有一个 ACTIVE 绑定
     CONSTRAINT uq_user_active_binding

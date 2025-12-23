@@ -31,7 +31,6 @@ public interface DistributorExternalInfoRepository extends JpaRepository<Distrib
         FROM DistributorExternalInfo e
         LEFT JOIN DistributorProfile p
             ON p.externalDistributor.id = e.id
-           AND p.status = 'ACTIVE'
         LEFT JOIN User u
             ON p.user.id = u.id
         WHERE e.externalCode NOT LIKE %:excluded%
@@ -52,7 +51,6 @@ public interface DistributorExternalInfoRepository extends JpaRepository<Distrib
     FROM DistributorExternalInfo e
     LEFT JOIN DistributorProfile p
         ON p.externalDistributor.id = e.id
-       AND p.status = 'ACTIVE'
     WHERE p.id IS NULL
       AND e.externalCode NOT LIKE %:excluded%
     """)
