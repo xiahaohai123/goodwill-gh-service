@@ -5,11 +5,13 @@ import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
+import org.springframework.hateoas.server.core.Relation;
 
 import java.time.OffsetDateTime;
 import java.util.Set;
 import java.util.UUID;
 
+@Relation(collectionRelation = "items", itemRelation = "item")
 @Entity
 @Table(name = "tbl_user")
 public class User {

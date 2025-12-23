@@ -42,6 +42,11 @@ CREATE TABLE IF NOT EXISTS distributor_profile_history
 UPDATE permission_group
 SET permissions = (
     SELECT jsonb_agg(DISTINCT elem)
-    FROM jsonb_array_elements(permissions || '["DISTRIBUTOR_QUERY", "DISTRIBUTOR_MODIFY"]'::jsonb) AS t(elem)
+    FROM jsonb_array_elements(permissions || '[
+      "DISTRIBUTOR_QUERY",
+      "DISTRIBUTOR_MODIFY",
+      "TILER_QUERY",
+      "TILER_MODIFY"
+    ]'::jsonb) AS t(elem)
 )
 WHERE name = 'MANAGER';

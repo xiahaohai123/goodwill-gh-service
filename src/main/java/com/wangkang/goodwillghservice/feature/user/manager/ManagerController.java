@@ -1,11 +1,13 @@
 package com.wangkang.goodwillghservice.feature.user.manager;
 
 
+import com.wangkang.goodwillghservice.dao.goodwillghservice.security.model.User;
 import com.wangkang.goodwillghservice.feature.k3cloud.model.customer.Customer;
 import com.wangkang.goodwillghservice.feature.k3cloud.service.K3cloudCustomerService;
 import com.wangkang.goodwillghservice.feature.user.distributor.Distributor4ManagerDTO;
 import com.wangkang.goodwillghservice.feature.user.distributor.DistributorExternalInfoDTO;
 import com.wangkang.goodwillghservice.feature.user.distributor.DistributorService;
+import com.wangkang.goodwillghservice.feature.user.tiler.TilerService;
 import com.wangkang.goodwillghservice.share.util.BizAssert;
 import jakarta.validation.Valid;
 import org.springframework.data.domain.Page;
@@ -24,10 +26,13 @@ public class ManagerController {
 
     private final DistributorService distributorService;
     private final K3cloudCustomerService k3cloudCustomerService;
+    private final TilerService tilerService;
 
-    public ManagerController(DistributorService distributorService, K3cloudCustomerService k3cloudCustomerService) {
+    public ManagerController(DistributorService distributorService, K3cloudCustomerService k3cloudCustomerService,
+                             TilerService tilerService) {
         this.distributorService = distributorService;
         this.k3cloudCustomerService = k3cloudCustomerService;
+        this.tilerService = tilerService;
     }
 
     @PreAuthorize("hasAuthority('DISTRIBUTOR_QUERY')")
@@ -86,5 +91,13 @@ public class ManagerController {
         BizAssert.notNull(userId, "user.null");
         distributorService.unbindDistributor2External(userId);
         return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasAuthority('TILER_QUERY')")
+    @GetMapping("/tiler")
+    public ResponseEntity<Object> getTilerList(Pageable pageable,
+                                                     PagedResourcesAssembler<User> assembler) {
+        Page<User> page = tilerService.getTilerPage(pageable);
+        return ResponseEntity.ok(assembler.toModel(page));
     }
 }
