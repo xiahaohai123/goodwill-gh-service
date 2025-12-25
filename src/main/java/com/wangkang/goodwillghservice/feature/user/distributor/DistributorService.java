@@ -15,6 +15,13 @@ public interface DistributorService {
     Page<Distributor4ManagerDTO> getDistributors(Pageable pageable);
 
     /**
+     * 获取账号信息
+     * @param uuid 经销商账号 id
+     * @return 信息
+     */
+    Distributor4ManagerDTO getDistributorProfile(UUID uuid);
+
+    /**
      * 从金蝶云拉取经销商信息到本地
      */
     void updateDistributorExternal();
@@ -44,5 +51,13 @@ public interface DistributorService {
      * @param userId 系统内用户 ID
      */
     void unbindDistributor2External(UUID userId);
+
+    /**
+     * 记录贴砖工销量
+     * @param recorderId    出售方，也是记录方的 UID
+     * @param tilerSalesDTO 记录内容和贴砖工信息
+     * @return 记录的总和销售量
+     */
+    int recordTilerSale(UUID recorderId, TilerSalesDTO tilerSalesDTO);
 
 }

@@ -58,6 +58,15 @@ public class DistributorServiceImpl implements DistributorService {
     }
 
     @Override
+    public Distributor4ManagerDTO getDistributorProfile(UUID uuid) {
+        Distributor4ManagerDTO distributorWithExternalInfo = userRepository.findDistributorWithExternalInfo(uuid);
+        if (distributorWithExternalInfo == null) {
+            throw new I18nBusinessException("user.not.distributor");
+        }
+        return distributorWithExternalInfo;
+    }
+
+    @Override
     public Page<DistributorExternalInfoDTO> getDistributorsExternalList(Pageable pageable) {
         // XH. 开头编号的客户是销号的客户，不予显示
         return distributorExternalInfoRepository.findExternalListExcluded("XH.", pageable);
@@ -166,5 +175,10 @@ public class DistributorServiceImpl implements DistributorService {
         history.setOperatedBy(operatorId);
         distributorProfileHistoryRepository.save(history);
         distributorProfileRepository.deleteById(profileId);
+    }
+
+    @Override
+    public int recordTilerSale(UUID recorderId, TilerSalesDTO tilerSalesDTO) {
+        return 0;
     }
 }

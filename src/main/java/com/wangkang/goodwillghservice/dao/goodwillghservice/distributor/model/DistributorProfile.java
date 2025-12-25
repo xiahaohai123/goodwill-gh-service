@@ -38,6 +38,9 @@ public class DistributorProfile {
     @Column(name = "bound_at", nullable = false, updatable = false)
     private OffsetDateTime boundAt;
 
+    @Column(name = "available_sales_cal_from",nullable = false)
+    private OffsetDateTime availableSalesCalFrom;
+
     // ---------- getter / setter ----------
 
     public UUID getId() {
@@ -73,4 +76,11 @@ public class DistributorProfile {
         this.boundAt = boundAt;
     }
 
+    public OffsetDateTime getAvailableSalesCalFrom() {
+        return availableSalesCalFrom;
+    }
+
+    public void setAvailableSalesCalFrom(OffsetDateTime availableSalesCalFrom) {
+        this.availableSalesCalFrom = availableSalesCalFrom;
+    }
 }

@@ -8,6 +8,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.Collection;
@@ -45,4 +46,21 @@ public interface UserRepository extends JpaRepository<User, UUID>,
             WHERE g.name = "DISTRIBUTOR"
             """)
     Page<Distributor4ManagerDTO> findDistributorWithExternalInfo(Pageable pageable);
+
+    @Query("""
+            SELECT new com.wangkang.goodwillghservice.feature.user.distributor.Distributor4ManagerDTO(
+                u.id,
+                u.areaCode,
+                u.phoneNumber,
+                u.displayName,
+                e.externalName
+            )
+            FROM User u
+            JOIN u.groups g
+            LEFT JOIN u.distributorProfile p
+            LEFT JOIN p.externalDistributor e
+            WHERE u.id = :uuid
+              AND g.name = 'DISTRIBUTOR'
+            """)
+    Distributor4ManagerDTO findDistributorWithExternalInfo(@Param("uuid") UUID uuid);
 }
