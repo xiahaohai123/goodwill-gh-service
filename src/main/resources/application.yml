@@ -48,3 +48,8 @@ sms:
     apiKey: ${SMS_AFRICA_TALKING_API_KEY:atsk_f7eae2a826d77cfa40fc513e0babb7ee2f39e64dc791d3d0a2c4818dc642c87e5e6a7f9d}
     username: ${SMS_AFRICA_TALKING_USERNAME:sandbox}
     host: ${SMS_AFRICA_TALKING_HOST:api.sandbox.africastalking.com}
+
+goodwill-tool-station:
+  secret-key: ${GW_TOOL_STATION_JWT_KEY:key}
+  host: ${GW_TOOL_STATION_HOST:tool.wangkanggh.com}
+  url-prefix: ${GW_TOOL_STATION_URL_PREFIX:goodwilltoolstation}

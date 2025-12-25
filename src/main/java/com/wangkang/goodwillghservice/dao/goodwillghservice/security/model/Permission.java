@@ -31,5 +31,4 @@ public enum Permission {
     TILER_SALES_MODIFY,
     /** 有限查询销售信息的权限，例如自己通过贴砖工卖出了多少产品，以及自己可以卖出的产品还有哪些 */
     DISTRIBUTOR_SALES_LIMITED_QUERY,
-
 }

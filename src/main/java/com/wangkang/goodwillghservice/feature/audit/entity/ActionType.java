@@ -5,6 +5,7 @@ public enum ActionType {
     USER("User"),
     SMS("SMS"),
     DISTRIBUTOR("Distributor"),
+    PRODUCT("Product"),
     ;
 
     ActionType(String value) {

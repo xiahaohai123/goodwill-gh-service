@@ -10,9 +10,7 @@ CREATE TABLE IF NOT EXISTS tiler_sales_record
     -- 数量与金额
     quantity       INTEGER     NOT NULL CHECK (quantity > 0),
 
-    -- 状态与来源
-    sale_type      VARCHAR(32) NOT NULL, -- ONLINE / OFFLINE / MANUAL / ADJUSTMENT
-    status         VARCHAR(32) NOT NULL, -- CREATED / CONFIRMED / CANCELLED / REFUNDED
+    record_type    TEXT        NOT NULL, -- SALE 销售 / CANCEL 撤销 / ADJUSTMENT 调整
 
     -- 时间维度（非常关键）
     sale_time      TIMESTAMPTZ NOT NULL, -- 实际成交时间
@@ -35,3 +33,15 @@ SET permissions = (SELECT jsonb_agg(DISTINCT elem)
                      "DISTRIBUTOR_SALES_LIMITED_QUERY"
                    ]'::jsonb) AS t(elem))
 WHERE name = 'DISTRIBUTOR';
+
+-- 产品信息
+CREATE TABLE IF NOT EXISTS tile
+(
+    id           UUID PRIMARY KEY,
+    code         TEXT   NOT NULL UNIQUE,
+    name         TEXT   NOT NULL,
+    model        TEXT   NOT NULL,
+    stock_unit   TEXT   NOT NULL,
+    weight_gross FLOAT8 NOT NULL,
+    color        TEXT   NULL
+);

@@ -3,6 +3,7 @@ package com.wangkang.goodwillghservice.feature.sms;
 import com.wangkang.goodwillghservice.core.exception.I18nBusinessException;
 import okhttp3.*;
 import org.apache.commons.lang3.StringUtils;
+import org.springframework.beans.factory.annotation.Qualifier;
 import org.springframework.beans.factory.annotation.Value;
 import org.springframework.stereotype.Component;
 
@@ -20,7 +21,11 @@ public class AfricasTalkingSmsProvider implements SmsProvider {
     @Value("${sms.africastalking.host}")
     private String host;
 
-    private final OkHttpClient client = new OkHttpClient();
+    private final OkHttpClient client;
+
+    public AfricasTalkingSmsProvider(@Qualifier("secureOkHttpClient") OkHttpClient client) {
+        this.client = client;
+    }
 
     @Override
     public boolean supports(String areaCode) {

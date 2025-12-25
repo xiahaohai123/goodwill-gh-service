@@ -21,6 +21,10 @@ public class JwtService {
     @Value("${JWT_SECRET:key}")
     private String secretKey;
 
+    /** 用于系统间调用 API 的 KEY */
+    @Value("${goodwill-tool-station.secret-key}")
+    private String innerSystemKey;
+
     public String generateToken(String areaCode,
                                 String phoneNumber,
                                 Collection<String> roles,
@@ -43,5 +47,18 @@ public class JwtService {
         String areaCode = decodedJWT.getClaim("areaCode").asString();
         String phoneNumber = decodedJWT.getClaim("phoneNumber").asString();
         return new CustomAuthenticationToken(areaCode, phoneNumber);
+    }
+
+    public String generateToken4GWToolStation(Collection<? extends GrantedAuthority> grantedAuthorities) {
+        List<String> authorityNameList = grantedAuthorities.stream().map(GrantedAuthority::getAuthority).toList();
+        long currentTimeMillis = System.currentTimeMillis();
+        return JWT.create()
+                .withIssuer("goodwill-gh-service")
+                .withSubject("goodwill-gh-service")
+                .withAudience("goodwill-tool-station-service")
+                .withIssuedAt(new Date(currentTimeMillis))
+                .withClaim("permissions", authorityNameList)
+                .withExpiresAt(new Date(currentTimeMillis + 5 * 60 * 1000))
+                .sign(Algorithm.HMAC256(innerSystemKey));
     }
 }
