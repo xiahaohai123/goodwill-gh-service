@@ -1,6 +1,5 @@
 package com.wangkang.goodwillghservice.feature.gwtoolstation;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.wangkang.goodwillghservice.core.exception.BusinessException;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.product.model.Tile;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.product.repository.TileRepository;
@@ -9,6 +8,7 @@ import com.wangkang.goodwillghservice.feature.audit.entity.Auditable;
 import com.wangkang.goodwillghservice.feature.gwtoolstation.model.MaterialDTO;
 import com.wangkang.goodwillghservice.feature.gwtoolstation.model.MaterialPageResponse;
 import com.wangkang.goodwillghservice.security.service.JwtService;
+import com.wangkang.goodwillghservice.share.util.JacksonUtils;
 import okhttp3.HttpUrl;
 import okhttp3.OkHttpClient;
 import okhttp3.Request;
@@ -54,8 +54,6 @@ public class TileServiceImpl implements TileService {
         SimpleGrantedAuthority authority = new SimpleGrantedAuthority("MATERIAL_QUERY");
         String jwt = jwtService.generateToken4GWToolStation(Collections.singleton(authority));
 
-        ObjectMapper objectMapper = new ObjectMapper();
-
         int page = 0;
         int size = 100;
         int totalPages = 1; // 先假设 1，第一次请求后修正
@@ -74,6 +72,7 @@ public class TileServiceImpl implements TileService {
 
             Request request = new Request.Builder()
                     .url(url)
+                    .addHeader("X-Internal-Call", "true")
                     .addHeader("Authorization", "Bearer " + jwt)
                     .get()
                     .build();
@@ -85,8 +84,7 @@ public class TileServiceImpl implements TileService {
                 }
 
                 String body = Objects.requireNonNull(response.body()).string();
-                MaterialPageResponse pageResponse =
-                        objectMapper.readValue(body, MaterialPageResponse.class);
+                MaterialPageResponse pageResponse = JacksonUtils.fromJson(body, MaterialPageResponse.class);
 
                 // 初始化总页数（只做一次）
                 if (page == 0) {
@@ -128,6 +126,7 @@ public class TileServiceImpl implements TileService {
             tile.setModel(dto.getModel());
             tile.setStockUnit(dto.getStockUnit());
             tile.setWeightGross(dto.getWeightGross().floatValue());
+            tile.setColor(dto.getColor());
             tileToSaveList.add(tile);
         }
         tileRepository.saveAll(tileToSaveList);
