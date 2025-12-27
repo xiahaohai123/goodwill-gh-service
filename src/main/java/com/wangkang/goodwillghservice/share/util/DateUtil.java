@@ -92,6 +92,24 @@ public class DateUtil {
         return localBeijing.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));  // 输出：2025-11-02 08:00:00
     }
 
+    public static String utcNowMinusSecondsToBeijingFormatted(long overlapSeconds) {
+        // 1. 获取当前 UTC 时间
+        OffsetDateTime utcNow = OffsetDateTime.now(ZoneOffset.UTC);
+
+        // 2. 减去 overlap 秒
+        OffsetDateTime utcTarget = utcNow.minusSeconds(overlapSeconds);
+
+        // 3. 转换为北京时间
+        ZoneId beijingZone = ZoneId.of("Asia/Shanghai");
+        OffsetDateTime beijingDateTime = utcTarget.atZoneSameInstant(beijingZone).toOffsetDateTime();
+
+        // 4. 去掉时区，仅保留 LocalDateTime
+        LocalDateTime localBeijing = beijingDateTime.toLocalDateTime();
+
+        // 5. 格式化输出
+        return localBeijing.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+    }
+
 
     public static String currentUTCTimeWithZone() {
         ZonedDateTime now = ZonedDateTime.now(ZoneOffset.UTC);

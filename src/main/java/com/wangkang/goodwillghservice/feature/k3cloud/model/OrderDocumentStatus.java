@@ -4,10 +4,10 @@ import java.util.Map;
 
 public enum OrderDocumentStatus {
 
-    CREATED("A", "创建"),
-    UNDER_REVIEW("B", "审核中"),
-    REVIEWED("C", "已审核"),
-    RE_REVIEW("D", "重新审核"),
+    CREATED("A", "创建", "order.documentStatus.created"),
+    UNDER_REVIEW("B", "审核中", "order.documentStatus.underReview"),
+    REVIEWED("C", "已审核", "order.documentStatus.reviewed"),
+    RE_REVIEW("D", "重新审核", "order.documentStatus.reReview"),
     ;
 
     public static final Map<String, String> DOCUMENT_STATUS_CODE_2_DESC = Map.of(
@@ -25,10 +25,13 @@ public enum OrderDocumentStatus {
     );
     public final String code;
     public final String description;
+    /** 用于多语言资源串的索引 */
+    public final String descriptionCode;
 
-    OrderDocumentStatus(String code, String description) {
+    OrderDocumentStatus(String code, String description, String descriptionCode) {
         this.code = code;
         this.description = description;
+        this.descriptionCode = descriptionCode;
     }
 
     public static String code2Description(String code) {
@@ -39,6 +42,6 @@ public enum OrderDocumentStatus {
     }
 
     public static OrderDocumentStatus fromCode(String code) {
-        return  code2InstanceMapping.get(code);
+        return code2InstanceMapping.get(code);
     }
 }

@@ -45,3 +45,24 @@ CREATE TABLE IF NOT EXISTS tile
     weight_gross FLOAT8 NOT NULL,
     color        TEXT   NULL
 );
+
+
+CREATE TABLE IF NOT EXISTS k3_sale_order
+(
+    id               UUID PRIMARY KEY,
+    bill_no          TEXT NOT NULL,
+    customer_id      int8 NOT NULL,
+    customer_number  TEXT,
+    customer_name    TEXT,
+    create_date      TIMESTAMP WITH TIME ZONE NOT NULL,
+    document_status  TEXT NOT NULL,
+    material_number  TEXT NOT NULL,
+    unit             TEXT NOT NULL,
+    quantity         INTEGER NOT NULL,
+    verify_status    TEXT NOT NULL,
+    verify_date      TIMESTAMP WITH TIME ZONE,
+    close_status     TEXT NOT NULL,
+    close_date       TIMESTAMP WITH TIME ZONE,
+    last_modify_date TIMESTAMP WITH TIME ZONE NOT NULL,
+    synced_at        TIMESTAMPTZ NOT NULL DEFAULT NOW()
+)
