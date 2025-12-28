@@ -1,6 +1,8 @@
 package com.wangkang.goodwillghservice.feature.k3cloud.service;
 
 import com.wangkang.goodwillghservice.dao.goodwillghservice.order.model.K3SaleOrder;
+import com.wangkang.goodwillghservice.feature.audit.entity.ActionType;
+import com.wangkang.goodwillghservice.feature.audit.entity.Auditable;
 import com.wangkang.goodwillghservice.feature.k3cloud.model.OrderBillType;
 import com.wangkang.goodwillghservice.feature.k3cloud.model.OrderCloseStatus;
 import com.wangkang.goodwillghservice.feature.k3cloud.model.OrderDocumentStatus;
@@ -15,6 +17,7 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
+import java.util.Collection;
 import java.util.List;
 import java.util.Map;
 
@@ -30,27 +33,53 @@ public class K3cloudOrderServiceImpl implements K3cloudOrderService {
             "FStockBaseOutJoinQty";
     private static final Log log = LogFactory.getLog(K3cloudOrderServiceImpl.class);
     private final K3cloudRequestService k3cloudRequestService;
+    private final K3cloudOrderSyncService k3cloudOrderSyncService;
 
-    public K3cloudOrderServiceImpl(K3cloudRequestService k3cloudRequestService) {
+    public K3cloudOrderServiceImpl(K3cloudRequestService k3cloudRequestService,
+                                   K3cloudOrderSyncService k3cloudOrderSyncService) {
         this.k3cloudRequestService = k3cloudRequestService;
+        this.k3cloudOrderSyncService = k3cloudOrderSyncService;
     }
 
     @Override
     public int syncModifiedOrder(long overlap) {
-        List<K3SaleOrder> orderByLastModifiedDateBefore = getOrderByLastModifiedDateFrom(overlap);
-        log.info(orderByLastModifiedDateBefore.toString());
-        // TODO upsert 存储到数据库内
-        //
-        return 0;
+        return doSyncModifiedOrder(overlap);
     }
 
-    private List<K3SaleOrder> getOrderByLastModifiedDateFrom(long overlap) {
+    @Auditable(actionType = ActionType.K3_ORDER, actionName = "Synchronize k3 order")
+    @Override
+    public int syncModifiedOrderAndAudit(long overlap) {
+        return doSyncModifiedOrder(overlap);
+    }
+
+
+    private int doSyncModifiedOrder(long overlap) {
+        // 循环更新数据
+        int startIndex = 0;
+        int limit = 2000;
+        Collection<K3SaleOrder> page;
+        int updatedRows = 0;
+        do {
+            page = getOrderByLastModifiedDateFrom(overlap, startIndex, limit);
+            if (!page.isEmpty()) {
+                int savedRows = k3cloudOrderSyncService.syncK3OrderPage(page);// 分页级事务
+                updatedRows += savedRows;
+            }
+            startIndex += limit;
+        } while (page.size() == limit);
+
+        log.info("[Sync Summary]: Updated " + updatedRows + " rows for k3 sale order");
+        return updatedRows;
+    }
+
+    private List<K3SaleOrder> getOrderByLastModifiedDateFrom(long overlap, int startIndex, int limit) {
         String currentFilterString = BASE_ORDER_FILTER;
         String endTime = DateUtil.utcNowMinusSecondsToBeijingFormatted(overlap);
 
         currentFilterString += " and FModifyDate >= '" + endTime + "'";
         List<Map<String, Object>> orderMapList;
-        orderMapList = k3cloudRequestService.billQueryOrderFieldsByFilter(currentFilterString, ORDER_FIELD);
+        orderMapList = k3cloudRequestService.billQueryOrderFieldsByFilter(currentFilterString, ORDER_FIELD, startIndex,
+                limit);
         return map2K3SaleOrder(orderMapList);
     }
 
