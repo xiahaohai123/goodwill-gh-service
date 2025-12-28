@@ -58,4 +58,10 @@ public class K3cloudScheduler {
         // 成功一次必须归零
         failedTimes = 0;
     }
+
+    @SystemAuthenticated
+    @Scheduled(cron = "0 10 * * * *", zone = "UTC")
+    public void syncK3CloudDeletedOrder(){
+        k3cloudOrderService.syncDeletedOrder();
+    }
 }

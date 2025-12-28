@@ -1,6 +1,7 @@
 package com.wangkang.goodwillghservice.feature.k3cloud.service;
 
 import com.wangkang.goodwillghservice.dao.goodwillghservice.order.model.K3SaleOrder;
+import com.wangkang.goodwillghservice.dao.goodwillghservice.order.repository.K3SaleOrderRepository;
 import com.wangkang.goodwillghservice.feature.audit.entity.ActionType;
 import com.wangkang.goodwillghservice.feature.audit.entity.Auditable;
 import com.wangkang.goodwillghservice.feature.k3cloud.model.OrderBillType;
@@ -13,32 +14,37 @@ import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.util.CollectionUtils;
 
 import java.math.BigDecimal;
 import java.time.OffsetDateTime;
 import java.time.ZoneOffset;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
+import java.util.stream.Collectors;
 
 @Service
 public class K3cloudOrderServiceImpl implements K3cloudOrderService {
+    private static final String K3_ORDER_FIELD_BILL_NUMBER = "FBillNo";
 
     private static final String BASE_ORDER_FILTER = "FUnitID.FNumber = 'CTN'" +
             " and FBillTypeId.FNumber = '" + OrderBillType.STANDARD.code + "'";
 
-    /** 给 BI 用的订单列 */
+    /** 同步用的订单列 */
     private static final String ORDER_FIELD = "FBillNo, FCustId, FCustId.FNumber, FCustId.FName, FCreateDate, FDocumentStatus," +
             "FMaterialId.FNumber, FUnitID.FNumber, FQty, FReviewStatus, FReviewDate, FCloseStatus, FCloseDate, FModifyDate," +
             "FStockBaseOutJoinQty";
     private static final Log log = LogFactory.getLog(K3cloudOrderServiceImpl.class);
     private final K3cloudRequestService k3cloudRequestService;
     private final K3cloudOrderSyncService k3cloudOrderSyncService;
+    private final K3SaleOrderRepository k3SaleOrderRepository;
 
     public K3cloudOrderServiceImpl(K3cloudRequestService k3cloudRequestService,
-                                   K3cloudOrderSyncService k3cloudOrderSyncService) {
+                                   K3cloudOrderSyncService k3cloudOrderSyncService,
+                                   K3SaleOrderRepository k3SaleOrderRepository) {
         this.k3cloudRequestService = k3cloudRequestService;
         this.k3cloudOrderSyncService = k3cloudOrderSyncService;
+        this.k3SaleOrderRepository = k3SaleOrderRepository;
     }
 
     @Override
@@ -51,7 +57,6 @@ public class K3cloudOrderServiceImpl implements K3cloudOrderService {
     public int syncModifiedOrderAndAudit(long overlap) {
         return doSyncModifiedOrder(overlap);
     }
-
 
     private int doSyncModifiedOrder(long overlap) {
         // 循环更新数据
@@ -87,7 +92,7 @@ public class K3cloudOrderServiceImpl implements K3cloudOrderService {
         // FModifyDate, FCloseDate, FCreateDate 返回的是北京时间，需要调整为 UTC 时间再存储
         return orderMapList.stream().map(obj -> {
             K3SaleOrder po = new K3SaleOrder();
-            po.setBillNo(ChoreUtil.toString(obj.get("FBillNo")));
+            po.setBillNo(ChoreUtil.toString(obj.get(K3_ORDER_FIELD_BILL_NUMBER)));
             po.setCustomerId(ChoreUtil.toInteger(obj.get("FCustId")));
             po.setCustomerNumber(ChoreUtil.toString(obj.get("FCustId.FNumber")));
             po.setCustomerName(ChoreUtil.toString(obj.get("FCustId.FName")));
@@ -115,5 +120,49 @@ public class K3cloudOrderServiceImpl implements K3cloudOrderService {
             po.setLastModifyDate(modifyDate);
             return po;
         }).toList();
+    }
+
+    @Transactional
+    @Override
+    public int syncDeletedOrder() {
+        return doSyncDeletedOrder();
+    }
+
+
+    @Auditable(actionType = ActionType.K3_ORDER, actionName = "Synchronize k3 deleted order")
+    @Transactional
+    @Override
+    public int syncDeletedOrderAndAudit() {
+        return doSyncDeletedOrder();
+    }
+
+    private int doSyncDeletedOrder() {
+        List<String> billNumbers = k3SaleOrderRepository.findDistinctBillNoByCloseStatus(OrderCloseStatus.NORMAL);
+        if (CollectionUtils.isEmpty(billNumbers)) {
+            return 0;
+        }
+        // 构造 IN 子句：'SO001','SO002',...
+        String inClause = billNumbers.stream()
+                .map(no -> "'" + no + "'")
+                .collect(Collectors.joining(","));
+        String filter = K3_ORDER_FIELD_BILL_NUMBER + " IN (" + inClause + ")";
+        List<Map<String, Object>> orderMapList = k3cloudRequestService.billQueryOrderFieldsByFilter(filter,
+                K3_ORDER_FIELD_BILL_NUMBER);
+        Set<String> k3BillNoSet = orderMapList.stream()
+                .map(item -> ChoreUtil.toString(item.get(K3_ORDER_FIELD_BILL_NUMBER)))
+                .collect(Collectors.toSet());
+
+        // 本地订单号集合
+        Set<String> localBillNoSet = new HashSet<>(billNumbers);
+        // 差集：本地有，但金蝶云没有
+        localBillNoSet.removeAll(k3BillNoSet);
+        // localBillNoSet 即为“已在金蝶云被删除的订单号”
+        if (!localBillNoSet.isEmpty()) {
+            log.info("[Sync Deleted Orders] Found deleted orders in K3: " + localBillNoSet);
+            int deletedRows = k3SaleOrderRepository.deleteByBillNoIn(localBillNoSet);
+            log.info("[Sync Deleted Orders] Deleted " + deletedRows + " rows");
+            return deletedRows;
+        }
+        return 0;
     }
 }

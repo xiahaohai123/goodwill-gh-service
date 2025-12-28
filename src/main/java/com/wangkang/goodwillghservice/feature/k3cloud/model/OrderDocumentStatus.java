@@ -8,6 +8,7 @@ public enum OrderDocumentStatus {
     UNDER_REVIEW("B", "审核中", "order.documentStatus.underReview"),
     REVIEWED("C", "已审核", "order.documentStatus.reviewed"),
     RE_REVIEW("D", "重新审核", "order.documentStatus.reReview"),
+    TMP_STORE("Z", "暂存", "order.documentStatus.tmpStore"),
     ;
 
     public static final Map<String, String> DOCUMENT_STATUS_CODE_2_DESC = Map.of(

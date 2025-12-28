@@ -38,12 +38,11 @@ public class K3cloudOrderSyncService {
         List<String> billNos = orders.stream()
                 .map(K3SaleOrder::getBillNo)
                 .toList();
-        k3SaleOrderRepository.deleteByBillNoIn(billNos);
+        int deletedRows = k3SaleOrderRepository.deleteByBillNoIn(billNos);
 
         List<K3SaleOrder> savedOrders = k3SaleOrderRepository.saveAll(orders);
 
-        int deleteRows = billNos.size();
-        log.info("Deleted " + deleteRows + " rows k3 orders");
+        log.info("Deleted " + deletedRows + " rows k3 orders");
         int savedRows = savedOrders.size();
         log.info("Saved " + savedRows + " rows k3 orders");
         return savedRows;

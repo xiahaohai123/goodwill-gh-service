@@ -59,6 +59,7 @@ public class K3cloudOrderController {
     @PreAuthorize("hasAnyAuthority('DEBUG')")
     @DeleteMapping
     public ResponseEntity<Object> syncDeletedOrder() {
-        return ResponseEntity.noContent().build();
+        int i = k3cloudOrderService.syncDeletedOrderAndAudit();
+        return ResponseEntity.ok(i);
     }
 }

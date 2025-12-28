@@ -158,7 +158,7 @@ public class K3cloudRequestServiceImpl implements K3cloudRequestService {
             dataObject.addProperty("limit", limit);
         }
         String queryJson = dataObject.toString();
-        log.info("Execute Bill Query, queryJson: " + queryJson);
+        log.debug("Execute Bill Query, queryJson: " + queryJson);
         List<List<Object>> materialObjectListList;
         try {
             materialObjectListList = client.executeBillQuery(queryJson);

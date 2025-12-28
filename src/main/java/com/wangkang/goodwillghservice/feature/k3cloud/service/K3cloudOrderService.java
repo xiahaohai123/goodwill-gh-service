@@ -23,4 +23,18 @@ public interface K3cloudOrderService {
      * @return 同步订单行数，一行和金蝶云的订单行一致，一个订单可以有多行分录组成
      */
     int syncModifiedOrderAndAudit(long overlap);
+
+    /**
+     * 检查未关闭的订单，是否有被取消或者删除，基于订单编号查询金蝶云上是否仍然存在订单，比较查出来不存在的订单进行删除
+     * 本方法不记录审计日志，一般用于同步器调用
+     * @return 删除的行数
+     */
+    int syncDeletedOrder();
+
+    /**
+     * 检查未关闭的订单，是否有被取消或者删除，基于订单编号查询金蝶云上是否仍然存在订单，比较查出来不存在的订单进行删除
+     * 本方法会记录审计日志，一般用于人工调用
+     * @return 删除的行数
+     */
+    int syncDeletedOrderAndAudit();
 }
