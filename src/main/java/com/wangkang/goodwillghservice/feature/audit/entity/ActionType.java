@@ -7,6 +7,7 @@ public enum ActionType {
     DISTRIBUTOR("Distributor"),
     PRODUCT("Product"),
     K3_ORDER("K3_Order"),
+    TILER_SALES("Tiler Sales"),
     ;
 
     ActionType(String value) {

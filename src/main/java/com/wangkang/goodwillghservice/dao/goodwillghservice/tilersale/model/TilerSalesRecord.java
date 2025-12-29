@@ -1,4 +1,4 @@
-package com.wangkang.goodwillghservice.dao.goodwillghservice.distributor.model;
+package com.wangkang.goodwillghservice.dao.goodwillghservice.tilersale.model;
 
 import jakarta.persistence.*;
 import org.hibernate.annotations.CreationTimestamp;
@@ -21,8 +21,8 @@ public class TilerSalesRecord {
     // ========= 业务维度 =========
 
     /** 花色 / 产品编码 */
-    @Column(name = "product_code")
-    private String productCode;
+    @Column(name = "product_color")
+    private String productColor;
 
     /** 经销商 / 门店 / 用户 */
     @Column(name = "distributor_id", nullable = false)
@@ -39,9 +39,9 @@ public class TilerSalesRecord {
 
     // ========= 状态与来源 =========
 
-    /** CREATED / CONFIRMED / CANCELLED / REFUNDED */
-    @Column(name = "status", nullable = false)
-    private String status;
+    /** SALE 销售 / CANCEL 撤销 / ADJUSTMENT 调整 */
+    @Column(name = "record_type", nullable = false)
+    private TilerSalesRecordType recordType;
 
     // ========= 时间维度 =========
 
@@ -62,12 +62,12 @@ public class TilerSalesRecord {
         this.id = id;
     }
 
-    public String getProductCode() {
-        return productCode;
+    public String getProductColor() {
+        return productColor;
     }
 
-    public void setProductCode(String productCode) {
-        this.productCode = productCode;
+    public void setProductColor(String productCode) {
+        this.productColor = productCode;
     }
 
     public UUID getDistributorId() {
@@ -94,12 +94,12 @@ public class TilerSalesRecord {
         this.quantity = quantity;
     }
 
-    public String getStatus() {
-        return status;
+    public TilerSalesRecordType getRecordType() {
+        return recordType;
     }
 
-    public void setStatus(String status) {
-        this.status = status;
+    public void setRecordType(TilerSalesRecordType recordType) {
+        this.recordType = recordType;
     }
 
     public OffsetDateTime getSaleTime() {

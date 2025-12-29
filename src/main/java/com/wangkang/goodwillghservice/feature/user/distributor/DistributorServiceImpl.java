@@ -141,6 +141,8 @@ public class DistributorServiceImpl implements DistributorService {
         DistributorProfile profile = new DistributorProfile();
         profile.setUser(user);
         profile.setExternalDistributor(externalDistributor);
+        // 以用户注册时间作为基线
+        profile.setAvailableSalesCalFrom(user.getCreatedAt());
         DistributorProfile savedProfile = distributorProfileRepository.save(profile);
 
         DistributorProfileHistory history = new DistributorProfileHistory();
