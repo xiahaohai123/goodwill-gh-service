@@ -1,5 +1,6 @@
 package com.wangkang.goodwillghservice.feature.tilersale;
 
+import com.wangkang.goodwillghservice.core.exception.I18nBusinessException;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.distributor.model.DistributorExternalInfo;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.distributor.model.DistributorProfile;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.distributor.repository.DistributorProfileRepository;
@@ -203,9 +204,12 @@ public class SaleAvailableServiceImpl implements SaleAvailableService {
 
     @Override
     public Collection<SaleAvailableDTO> getSaleAvailable(UUID distributorId) {
-        List<SaleAvailableSnapshot> snapshotList = saleAvailableSnapshotRepository.findLatestBatchByDistributorId(
-                distributorId);
         DistributorProfile distributorProfile = distributorProfileRepository.findByUserIdWithExternalDistributor(
+                distributorId);
+        if (distributorProfile == null) {
+            throw new I18nBusinessException("distributor.not.bound");
+        }
+        List<SaleAvailableSnapshot> snapshotList = saleAvailableSnapshotRepository.findLatestBatchByDistributorId(
                 distributorId);
         Integer externalDistributorId = distributorProfile.getExternalDistributor().getExternalId();
         SaleAvailableSnapshot firstShot = snapshotList.getFirst();
