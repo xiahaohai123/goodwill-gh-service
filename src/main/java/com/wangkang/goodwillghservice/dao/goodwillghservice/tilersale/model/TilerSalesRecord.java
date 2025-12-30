@@ -1,7 +1,6 @@
 package com.wangkang.goodwillghservice.dao.goodwillghservice.tilersale.model;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 
@@ -40,19 +39,25 @@ public class TilerSalesRecord {
     // ========= 状态与来源 =========
 
     /** SALE 销售 / CANCEL 撤销 / ADJUSTMENT 调整 */
+    @Enumerated(EnumType.STRING)
     @Column(name = "record_type", nullable = false)
     private TilerSalesRecordType recordType;
 
     // ========= 时间维度 =========
 
     /** 实际成交时间 */
-    @CreationTimestamp
     @Column(name = "sale_time", nullable = false)
     private OffsetDateTime saleTime;
 
-    @CreationTimestamp
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
+
+    /**
+     * DB 生成的严格递增序列，用于快照边界
+     * 由 PostgreSQL sequence + DEFAULT nextval(...) 负责
+     */
+    @Column(name = "seq", nullable = false, updatable = false, insertable = false)
+    private Long seq;
 
     public UUID getId() {
         return id;
@@ -116,5 +121,13 @@ public class TilerSalesRecord {
 
     public void setCreatedAt(OffsetDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public Long getSeq() {
+        return seq;
+    }
+
+    public void setSeq(Long seq) {
+        this.seq = seq;
     }
 }

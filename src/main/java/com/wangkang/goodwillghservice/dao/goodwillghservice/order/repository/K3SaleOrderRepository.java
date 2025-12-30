@@ -28,5 +28,6 @@ public interface K3SaleOrderRepository extends JpaRepository<K3SaleOrder, UUID>,
 
     Page<K3SaleOrder> findByCustomerIdAndCloseDateBetween(Integer customerId, OffsetDateTime closeDateAfter, OffsetDateTime closeDateBefore, Pageable pageable);
 
-    Page<K3SaleOrder> findByCustomerIdAndCloseDateBetweenAndCloseStatus(Integer customerId, OffsetDateTime closeDateAfter, OffsetDateTime closeDateBefore, OrderCloseStatus closeStatus, Pageable pageable);
+    Page<K3SaleOrder> findByCustomerIdAndCloseDateGreaterThanEqualAndCloseDateLessThanAndCloseStatus(Integer customerId, OffsetDateTime closeDateAfter, OffsetDateTime closeDateBefore, OrderCloseStatus closeStatus, Pageable pageable);
+    List<K3SaleOrder> findByCustomerIdAndCloseDateGreaterThanEqualAndCloseDateLessThanAndCloseStatus(Integer customerId, OffsetDateTime closeDateAfter, OffsetDateTime closeDateBefore, OrderCloseStatus closeStatus);
 }

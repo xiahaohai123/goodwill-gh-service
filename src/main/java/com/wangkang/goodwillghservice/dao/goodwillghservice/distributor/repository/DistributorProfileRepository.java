@@ -6,6 +6,7 @@ import com.wangkang.goodwillghservice.dao.goodwillghservice.security.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
 import org.springframework.data.jpa.repository.Query;
+import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
@@ -27,5 +28,13 @@ public interface DistributorProfileRepository extends JpaRepository<DistributorP
             join fetch dp.externalDistributor
             """)
     List<DistributorProfile> findAllWithExternalDistributor();
+
+    @Query("""
+            select dp
+            from DistributorProfile dp
+            join fetch dp.externalDistributor
+            WHERE dp.user.id = :distributorId
+            """)
+    DistributorProfile findByUserIdWithExternalDistributor(@Param("distributorId") UUID distributorId);
 
 }

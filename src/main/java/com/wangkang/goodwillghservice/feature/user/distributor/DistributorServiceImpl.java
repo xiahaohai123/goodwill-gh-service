@@ -10,10 +10,14 @@ import com.wangkang.goodwillghservice.dao.goodwillghservice.distributor.reposito
 import com.wangkang.goodwillghservice.dao.goodwillghservice.distributor.repository.DistributorProfileRepository;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.model.User;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.repository.UserRepository;
+import com.wangkang.goodwillghservice.dao.goodwillghservice.tilersale.model.TilerSalesRecord;
+import com.wangkang.goodwillghservice.dao.goodwillghservice.tilersale.model.TilerSalesRecordType;
+import com.wangkang.goodwillghservice.dao.goodwillghservice.tilersale.repository.TilerSalesRecordRepository;
 import com.wangkang.goodwillghservice.feature.audit.entity.ActionType;
 import com.wangkang.goodwillghservice.feature.audit.entity.Auditable;
 import com.wangkang.goodwillghservice.feature.k3cloud.model.customer.Customer;
 import com.wangkang.goodwillghservice.feature.k3cloud.service.K3cloudCustomerService;
+import com.wangkang.goodwillghservice.feature.tilersale.SaleAvailableDTO;
 import com.wangkang.goodwillghservice.security.BuiltInPermissionGroup;
 import com.wangkang.goodwillghservice.share.util.BizAssert;
 import com.wangkang.goodwillghservice.share.util.DateUtil;
@@ -24,10 +28,7 @@ import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Map;
-import java.util.UUID;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -39,17 +40,20 @@ public class DistributorServiceImpl implements DistributorService {
     private final K3cloudCustomerService k3cloudCustomerService;
     private final DistributorProfileRepository distributorProfileRepository;
     private final DistributorProfileHistoryRepository distributorProfileHistoryRepository;
+    private final TilerSalesRecordRepository tilerSalesRecordRepository;
 
     public DistributorServiceImpl(UserRepository userRepository,
                                   DistributorExternalInfoRepository distributorExternalInfoRepository,
                                   K3cloudCustomerService k3cloudCustomerService,
                                   DistributorProfileRepository distributorProfileRepository,
-                                  DistributorProfileHistoryRepository distributorProfileHistoryRepository) {
+                                  DistributorProfileHistoryRepository distributorProfileHistoryRepository,
+                                  TilerSalesRecordRepository tilerSalesRecordRepository) {
         this.userRepository = userRepository;
         this.distributorExternalInfoRepository = distributorExternalInfoRepository;
         this.k3cloudCustomerService = k3cloudCustomerService;
         this.distributorProfileRepository = distributorProfileRepository;
         this.distributorProfileHistoryRepository = distributorProfileHistoryRepository;
+        this.tilerSalesRecordRepository = tilerSalesRecordRepository;
     }
 
     @Override
@@ -89,8 +93,7 @@ public class DistributorServiceImpl implements DistributorService {
         OffsetDateTime currentDateTimeUTC = DateUtil.currentDateTimeUTC();
 
         // 2. 查询数据库中已有的 external distributor
-        List<DistributorExternalInfo> existingList =
-                distributorExternalInfoRepository.findAll();
+        List<DistributorExternalInfo> existingList = distributorExternalInfoRepository.findAll();
 
         // 3. 以 externalId 建立 Map，便于 O(1) 查找
         Map<Integer, DistributorExternalInfo> existingMap = existingList.stream()
@@ -180,7 +183,40 @@ public class DistributorServiceImpl implements DistributorService {
     }
 
     @Override
+    public Collection<SaleAvailableDTO> getSaleAvailable(UUID distributorId) {
+
+
+        return List.of();
+    }
+
+    @Override
     public int recordTilerSale(UUID recorderId, TilerSalesDTO tilerSalesDTO) {
-        return 0;
+        UUID tilerUserId = tilerSalesDTO.getUuid();
+        Collection<TilerSalesDataDTO> tilerSalesData = tilerSalesDTO.getTilerSalesData();
+        Map<String, Integer> color2QuantityMap = new HashMap<>();
+        // 合并重复花色记录，累加
+        tilerSalesData.forEach(data -> {
+            Integer originalQuantity = color2QuantityMap.computeIfAbsent(data.getColorCode(), color -> 0);
+            color2QuantityMap.put(data.getColorCode(), originalQuantity + data.getQuantity());
+        });
+        // TODO 检查是否有这么多货可以记录
+
+
+        OffsetDateTime createTime = DateUtil.currentDateTimeUTC();
+        List<TilerSalesRecord> toSavedRecord = color2QuantityMap.entrySet().stream().map(data -> {
+            String color = data.getKey();
+            Integer quantity = data.getValue();
+            TilerSalesRecord tilerSalesRecord = new TilerSalesRecord();
+            tilerSalesRecord.setProductColor(color);
+            tilerSalesRecord.setDistributorId(recorderId);
+            tilerSalesRecord.setTilerId(tilerUserId);
+            tilerSalesRecord.setQuantity(quantity);
+            tilerSalesRecord.setRecordType(TilerSalesRecordType.SALE);
+            tilerSalesRecord.setSaleTime(createTime);
+            tilerSalesRecord.setCreatedAt(createTime);
+            return tilerSalesRecord;
+        }).toList();
+
+        return tilerSalesRecordRepository.saveAll(toSavedRecord).size();
     }
 }

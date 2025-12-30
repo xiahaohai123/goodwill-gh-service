@@ -1,7 +1,6 @@
 package com.wangkang.goodwillghservice.dao.goodwillghservice.tilersale.model;
 
 import jakarta.persistence.*;
-import org.hibernate.annotations.CreationTimestamp;
 import org.hibernate.annotations.JdbcType;
 import org.hibernate.type.descriptor.jdbc.UUIDJdbcType;
 
@@ -27,9 +26,15 @@ public class SaleAvailableSnapshot {
     private Integer available;
     @Column(name = "based_on", nullable = false)
     private OffsetDateTime basedOn;
-    @CreationTimestamp
+    /** 创建时间，强制要求手动填入，以确保批量保存的创建时间是相同的 */
     @Column(name = "created_at", nullable = false)
     private OffsetDateTime createdAt;
+
+    @Column(name = "batch_id", nullable = false)
+    private UUID batchId;
+    /** 本次快照同步到的贴砖工销售订单序列号，哨兵值: 0 */
+    @Column(name = "tiler_sales_record_seq", nullable = false, updatable = false)
+    private Long tilerSalesRecordSeq;
 
     public UUID getId() {
         return id;
@@ -77,5 +82,21 @@ public class SaleAvailableSnapshot {
 
     public void setCreatedAt(OffsetDateTime createdAt) {
         this.createdAt = createdAt;
+    }
+
+    public UUID getBatchId() {
+        return batchId;
+    }
+
+    public void setBatchId(UUID batchId) {
+        this.batchId = batchId;
+    }
+
+    public Long getTilerSalesRecordSeq() {
+        return tilerSalesRecordSeq;
+    }
+
+    public void setTilerSalesRecordSeq(Long tilerSalesRecordSeq) {
+        this.tilerSalesRecordSeq = tilerSalesRecordSeq;
     }
 }

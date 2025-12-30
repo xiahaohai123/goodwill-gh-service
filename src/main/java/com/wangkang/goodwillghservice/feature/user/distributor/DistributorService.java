@@ -1,9 +1,11 @@
 package com.wangkang.goodwillghservice.feature.user.distributor;
 
 
+import com.wangkang.goodwillghservice.feature.tilersale.SaleAvailableDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
+import java.util.Collection;
 import java.util.UUID;
 
 public interface DistributorService {
@@ -54,10 +56,17 @@ public interface DistributorService {
 
     /**
      * 记录贴砖工销量
-     * @param recorderId    出售方，也是记录方的 UID
+     * @param recorderId    出售方，也是记录方的 UID，也是经销商 UID
      * @param tilerSalesDTO 记录内容和贴砖工信息
      * @return 记录的总和销售量
      */
     int recordTilerSale(UUID recorderId, TilerSalesDTO tilerSalesDTO);
 
+
+    /**
+     * 获取经销商的可用销售量信息
+     * @param distributorId 经销商用户 id
+     * @return 可用销售量信息集合
+     */
+    Collection<SaleAvailableDTO> getSaleAvailable(UUID distributorId);
 }

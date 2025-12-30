@@ -3,18 +3,19 @@ CREATE TABLE IF NOT EXISTS tiler_sales_record
     id             UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
 
     -- 业务维度
-    product_color   TEXT,                 -- 花色
-    distributor_id UUID        NOT NULL, -- 经销商 / 门店 / 用户
+    product_color  TEXT,                                                      -- 花色
+    distributor_id UUID        NOT NULL,                                      -- 经销商 / 门店 / 用户
     tiler_id       UUID        NOT NULL,
 
     -- 数量与金额
     quantity       INTEGER     NOT NULL CHECK (quantity > 0),
 
-    record_type    TEXT        NOT NULL, -- SALE 销售 / CANCEL 撤销 / ADJUSTMENT 调整
+    record_type    TEXT        NOT NULL,                                      -- SALE 销售 / CANCEL 撤销 / ADJUSTMENT 调整
 
     -- 时间维度（非常关键）
-    sale_time      TIMESTAMPTZ NOT NULL, -- 实际成交时间
-    created_at     TIMESTAMPTZ NOT NULL DEFAULT now()
+    sale_time      TIMESTAMPTZ NOT NULL,                                      -- 实际成交时间
+    created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
+    seq            BIGINT      NOT NULL DEFAULT nextval('tiler_sales_record') -- 序列，用于多线程环境下的增量计算，确保边界明晰
 );
 
 CREATE INDEX IF NOT EXISTS idx_tiler_sales_tiler_time
@@ -70,10 +71,12 @@ CREATE TABLE IF NOT EXISTS k3_sale_order
 
 CREATE TABLE IF NOT EXISTS sale_available_snapshot
 (
-    id             UUID PRIMARY KEY,
-    distributor_id UUID                     NOT NULL,
-    color          TEXT                     NOT NULL,
-    available      INTEGER                  NOT NULL,
-    based_on       TIMESTAMP WITH TIME ZONE NOT NULL, -- 基于什么关闭时间打的快照
-    created_at     TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW()
+    id                     UUID PRIMARY KEY,
+    distributor_id         UUID                     NOT NULL,
+    color                  TEXT                     NOT NULL,
+    available              INTEGER                  NOT NULL,
+    based_on               TIMESTAMP WITH TIME ZONE NOT NULL, -- 基于什么关闭时间打的快照
+    created_at             TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
+    batch_id               UUID                     NOT NULL, -- 快照批次 id，方便按批次查询
+    tiler_sales_record_seq BIGINT                   NOT NULL  -- 本次快照算到贴砖工销量的最大序列
 )
