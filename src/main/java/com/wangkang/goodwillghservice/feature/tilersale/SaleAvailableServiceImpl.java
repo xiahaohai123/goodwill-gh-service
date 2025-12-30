@@ -59,6 +59,16 @@ public class SaleAvailableServiceImpl implements SaleAvailableService {
         }
     }
 
+    @Override
+    public void takeFullSnapshot4Distributor(UUID distributorId) {
+        DistributorProfile distributorProfile = distributorProfileRepository.findByUserIdWithExternalDistributor(
+                distributorId);
+        if (distributorProfile == null) {
+            throw new IllegalArgumentException("Can't find distributor profile for " + distributorId);
+        }
+        takeFullSnapshot4Distributor(distributorProfile);
+    }
+
     private void takeFullSnapshot4Distributor(DistributorProfile distributorProfile) {
 
         // 获取经销商的基线时间
@@ -179,11 +189,6 @@ public class SaleAvailableServiceImpl implements SaleAvailableService {
         }
     }
 
-
-    @Override
-    public List<SaleAvailableSnapshot> getLatestSnapshotByDistributor(UUID distributorId) {
-        return saleAvailableSnapshotRepository.findLatestBatchByDistributorId(distributorId);
-    }
 
     @Override
     public Collection<SaleAvailableDTO> getSaleAvailable(UUID distributorId) {

@@ -8,6 +8,8 @@ import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
+import java.util.UUID;
+
 @RestController
 @RequestMapping("/api/sale")
 public class SaleController {
@@ -28,6 +30,8 @@ public class SaleController {
     @PreAuthorize("hasAnyAuthority('DEBUG')")
     @PostMapping("/snapshot/{distributorId}")
     public ResponseEntity<Object> generateSnapshot4SpecificDistributor(@PathVariable String distributorId){
+        UUID uuid = UUID.fromString(distributorId);
+        saleAvailableService.takeFullSnapshot4Distributor(uuid);
         return ResponseEntity.ok().build();
     }
 }

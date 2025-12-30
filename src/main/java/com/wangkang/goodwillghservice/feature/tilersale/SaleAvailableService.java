@@ -1,9 +1,6 @@
 package com.wangkang.goodwillghservice.feature.tilersale;
 
-import com.wangkang.goodwillghservice.dao.goodwillghservice.tilersale.model.SaleAvailableSnapshot;
-
 import java.util.Collection;
-import java.util.List;
 import java.util.UUID;
 
 public interface SaleAvailableService {
@@ -13,8 +10,11 @@ public interface SaleAvailableService {
      */
     void takeFullSnapshot4AllDistributor();
 
-
-    List<SaleAvailableSnapshot> getLatestSnapshotByDistributor(UUID distributorId);
+    /**
+     * 为某个经销商构建全量纠偏快照
+     * @param distributorId 经销商用户 id
+     */
+    void takeFullSnapshot4Distributor(UUID distributorId);
 
     Collection<SaleAvailableDTO> getSaleAvailable(UUID distributorId);
 }
