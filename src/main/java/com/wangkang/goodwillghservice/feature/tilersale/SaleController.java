@@ -21,17 +21,32 @@ public class SaleController {
     }
 
     @PreAuthorize("hasAnyAuthority('DEBUG')")
-    @PostMapping("/snapshot/all")
-    public ResponseEntity<Object> generateSnapshot4AllDistributor() {
-        saleAvailableService.takeFullSnapshot4AllDistributor();
+    @PostMapping("/snapshot/full/all")
+    public ResponseEntity<Object> buildSnapshot4AllDistributor() {
+        saleAvailableService.buildFullSnapshot4AllDistributor();
         return ResponseEntity.noContent().build();
     }
 
     @PreAuthorize("hasAnyAuthority('DEBUG')")
-    @PostMapping("/snapshot/{distributorId}")
-    public ResponseEntity<Object> generateSnapshot4SpecificDistributor(@PathVariable String distributorId){
+    @PostMapping("/snapshot/full/{distributorId}")
+    public ResponseEntity<Object> buildSnapshot4SpecificDistributor(@PathVariable String distributorId) {
         UUID uuid = UUID.fromString(distributorId);
-        saleAvailableService.takeFullSnapshot4Distributor(uuid);
-        return ResponseEntity.ok().build();
+        saleAvailableService.buildFullSnapshot4Distributor(uuid);
+        return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasAnyAuthority('DEBUG')")
+    @PostMapping("/snapshot/incremental/all")
+    public ResponseEntity<Object> buildIncrementalSnapshot4AllDistributor() {
+        saleAvailableService.buildIncrementalSnapshot4AllDistributor();
+        return ResponseEntity.noContent().build();
+    }
+
+    @PreAuthorize("hasAnyAuthority('DEBUG')")
+    @PostMapping("/snapshot/incremental/{distributorId}")
+    public ResponseEntity<Object> buildIncrementalSnapshot4SpecificDistributor(@PathVariable String distributorId) {
+        UUID uuid = UUID.fromString(distributorId);
+        saleAvailableService.buildIncrementalSnapshot4Distributor(uuid);
+        return ResponseEntity.noContent().build();
     }
 }

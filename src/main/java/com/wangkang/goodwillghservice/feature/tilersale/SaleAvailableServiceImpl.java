@@ -51,7 +51,7 @@ public class SaleAvailableServiceImpl implements SaleAvailableService {
 
     @Auditable(actionType = ActionType.TILER_SALES, actionName = "Take full snapshot for all distributor")
     @Override
-    public void takeFullSnapshot4AllDistributor() {
+    public void buildFullSnapshot4AllDistributor() {
         // 按经销商分组，一个经销商算一次，后期可以考虑使用多线程模型做
         List<DistributorProfile> allProfile = distributorProfileRepository.findAllWithExternalDistributor();
         for (DistributorProfile distributorProfile : allProfile) {
@@ -59,8 +59,9 @@ public class SaleAvailableServiceImpl implements SaleAvailableService {
         }
     }
 
+    @Auditable(actionType = ActionType.TILER_SALES, actionName = "Take full snapshot for specific distributor")
     @Override
-    public void takeFullSnapshot4Distributor(UUID distributorId) {
+    public void buildFullSnapshot4Distributor(UUID distributorId) {
         DistributorProfile distributorProfile = distributorProfileRepository.findByUserIdWithExternalDistributor(
                 distributorId);
         if (distributorProfile == null) {
@@ -81,29 +82,13 @@ public class SaleAvailableServiceImpl implements SaleAvailableService {
         Map<String, Integer> colorAvailable = computeColorAvailable4Distributor(distributorExternalId,
                 availableSalesCalFrom, closeDateBaseLine);
         // 计算经销商已用销量
-        UUID distributorId = distributorProfile.getUser().getId();
         // 基于序列的计算
+        UUID distributorId = distributorProfile.getUser().getId();
         Long maxSeqL = computeUsedSales(distributorId, colorAvailable);
         long maxSeq = maxSeqL != null && maxSeqL >= 0 ? maxSeqL : 0L;
 
         // 构建快照
-        OffsetDateTime createTime = DateUtil.currentDateTimeUTC();
-        UUID batchId = UUID.randomUUID();
-        List<SaleAvailableSnapshot> toSaveSnapshotList = new ArrayList<>();
-        for (Map.Entry<String, Integer> availableEntry : colorAvailable.entrySet()) {
-            String color = availableEntry.getKey();
-            Integer available = availableEntry.getValue();
-            SaleAvailableSnapshot saleAvailableSnapshot = new SaleAvailableSnapshot();
-            saleAvailableSnapshot.setDistributorId(distributorId);
-            saleAvailableSnapshot.setColor(color);
-            saleAvailableSnapshot.setAvailable(available);
-            saleAvailableSnapshot.setBasedOn(closeDateBaseLine);
-            saleAvailableSnapshot.setCreatedAt(createTime);
-            saleAvailableSnapshot.setBatchId(batchId);
-            saleAvailableSnapshot.setTilerSalesRecordSeq(maxSeq);
-            toSaveSnapshotList.add(saleAvailableSnapshot);
-        }
-        saleAvailableSnapshotRepository.saveAll(toSaveSnapshotList);
+        saveNewSnapshot(colorAvailable, distributorId, closeDateBaseLine, maxSeq);
     }
 
     /**
@@ -120,6 +105,32 @@ public class SaleAvailableServiceImpl implements SaleAvailableService {
         List<ColorDeltaProjection> deltas = tilerSalesRecordRepository.sumDeltaGroupByColorBeforeOrEqualSeq(
                 distributorId, maxSeq);
 
+        for (ColorDeltaProjection p : deltas) {
+            String color = p.getColor();
+            int delta = p.getDelta() == null ? 0 : p.getDelta();
+            colorAvailable.merge(color, delta, Integer::sum);
+        }
+        return maxSeq;
+    }
+
+    /**
+     * 基于使用记录计算使用量并合并进入可用量
+     * @param distributorId  经销商用户 id
+     * @param fromSeq        从哪个序列号开始计算，闭区间
+     * @param colorAvailable 可用量集合，会被修改
+     * @return 本次计算后覆盖的最大序列值，方便下一次调用基于此序列+1进行计算
+     */
+    private Long computeUsedSales(UUID distributorId, long fromSeq, Map<String, Integer> colorAvailable) {
+        Long maxSeq = tilerSalesRecordRepository.findMaxSeq(distributorId);
+        // 起步序列比最大序列还大，系统内没有更新的记录了，直接返回
+        if (maxSeq == null) {
+            return null;
+        }
+        if (fromSeq > maxSeq) {
+            return maxSeq;
+        }
+        List<ColorDeltaProjection> deltas = tilerSalesRecordRepository.sumDeltaGroupByColorAfterOrEqualFromSeqBeforeOrEqualSeq(
+                distributorId, fromSeq, maxSeq);
         for (ColorDeltaProjection p : deltas) {
             String color = p.getColor();
             int delta = p.getDelta() == null ? 0 : p.getDelta();
@@ -225,7 +236,8 @@ public class SaleAvailableServiceImpl implements SaleAvailableService {
 
         // TODO 被消耗量计算打磨：构建 redis LRU 缓存
         // 减去快照基线时间后的被消耗的销售量记录
-        Collection<ColorDeltaProjection> usedSales = getUsedSales(distributorId, firstShot.getTilerSalesRecordSeq());
+        Collection<ColorDeltaProjection> usedSales = getUsedSales(distributorId,
+                firstShot.getTilerSalesRecordSeq() + 1);
         usedSales.forEach(p ->
                 accumulateAvailable(
                         color2DtoMap,
@@ -270,5 +282,77 @@ public class SaleAvailableServiceImpl implements SaleAvailableService {
         // TODO 考虑改 redis 缓存查询
         List<Tile> tileList = tileRepository.findAllByCodeIn(materialNumberList);
         return tileList.stream().collect(Collectors.toMap(Tile::getCode, Tile::getColor));
+    }
+
+
+    @Auditable(actionType = ActionType.TILER_SALES, actionName = "Take incremental snapshot for all distributor")
+    @Override
+    public void buildIncrementalSnapshot4AllDistributor() {
+        // 按经销商分组，一个经销商算一次，后期可以考虑使用多线程模型做
+        List<DistributorProfile> allProfile = distributorProfileRepository.findAllWithExternalDistributor();
+        for (DistributorProfile distributorProfile : allProfile) {
+            buildIncrementalSnapshot4Distributor(distributorProfile);
+        }
+    }
+
+    @Auditable(actionType = ActionType.TILER_SALES, actionName = "Take incremental snapshot for specific distributor")
+    @Override
+    public void buildIncrementalSnapshot4Distributor(UUID distributorId) {
+        DistributorProfile distributorProfile = distributorProfileRepository.findByUserIdWithExternalDistributor(
+                distributorId);
+        if (distributorProfile == null) {
+            throw new IllegalArgumentException("Can't find distributor profile for " + distributorId);
+        }
+        buildIncrementalSnapshot4Distributor(distributorProfile);
+    }
+
+    private void buildIncrementalSnapshot4Distributor(DistributorProfile distributorProfile) {
+        UUID distributorId = distributorProfile.getUser().getId();
+        // 获取最近的快照
+        List<SaleAvailableSnapshot> snapshotList = saleAvailableSnapshotRepository.findLatestBatchByDistributorId(
+                distributorId);
+        Map<String, Integer> colorAvailable = snapshotList.stream()
+                .collect(Collectors.toMap(SaleAvailableSnapshot::getColor, SaleAvailableSnapshot::getAvailable));
+        // 增量计算
+        Integer externalDistributorId = distributorProfile.getExternalDistributor().getExternalId();
+        SaleAvailableSnapshot firstShot = snapshotList.getFirst();
+        OffsetDateTime basedOnCloseTime = firstShot.getBasedOn();
+        OffsetDateTime beforeTime = DateUtil.currentDateTimeUTC().minusDays(7);
+        // 加算快照基线时间后的可纳入计算的金蝶云订单
+        List<K3SaleOrder> updatedOrder = k3SaleOrderRepository.findByCustomerIdAndCloseDateGreaterThanEqualAndCloseDateLessThanAndCloseStatus(
+                externalDistributorId, basedOnCloseTime, beforeTime, OrderCloseStatus.CLOSED);
+        List<K3SaleOrder> orderList = filterGradeA(updatedOrder);
+        Map<String, String> numberMap2Color = computeCode2ColorMap(orderList);
+        Map<String, Integer> updatedColorAvailable = new HashMap<>();
+        computeColorAvailable(orderList, numberMap2Color, updatedColorAvailable);
+        updatedColorAvailable.forEach((color, delta) -> colorAvailable.merge(color, delta, Integer::sum));
+        // 减去已用销量
+        Long maxSeqL = computeUsedSales(distributorId, firstShot.getTilerSalesRecordSeq() + 1, colorAvailable);
+        long maxSeq = maxSeqL != null && maxSeqL >= 0 ? maxSeqL : 0L;
+        // 保存新快照
+        saveNewSnapshot(colorAvailable, distributorId, beforeTime, maxSeq);
+    }
+
+    private void saveNewSnapshot(Map<String, Integer> colorAvailable,
+                                 UUID distributorId,
+                                 OffsetDateTime beforeTime,
+                                 long maxSeq) {
+        OffsetDateTime createTime = DateUtil.currentDateTimeUTC();
+        UUID batchId = UUID.randomUUID();
+        List<SaleAvailableSnapshot> toSaveSnapshotList = new ArrayList<>();
+        for (Map.Entry<String, Integer> availableEntry : colorAvailable.entrySet()) {
+            String color = availableEntry.getKey();
+            Integer available = availableEntry.getValue();
+            SaleAvailableSnapshot saleAvailableSnapshot = new SaleAvailableSnapshot();
+            saleAvailableSnapshot.setDistributorId(distributorId);
+            saleAvailableSnapshot.setColor(color);
+            saleAvailableSnapshot.setAvailable(available);
+            saleAvailableSnapshot.setBasedOn(beforeTime);
+            saleAvailableSnapshot.setCreatedAt(createTime);
+            saleAvailableSnapshot.setBatchId(batchId);
+            saleAvailableSnapshot.setTilerSalesRecordSeq(maxSeq);
+            toSaveSnapshotList.add(saleAvailableSnapshot);
+        }
+        saleAvailableSnapshotRepository.saveAll(toSaveSnapshotList);
     }
 }
