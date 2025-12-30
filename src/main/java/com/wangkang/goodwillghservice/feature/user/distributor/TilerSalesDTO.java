@@ -1,5 +1,6 @@
 package com.wangkang.goodwillghservice.feature.user.distributor;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.NotEmpty;
 import jakarta.validation.constraints.NotNull;
 
@@ -9,16 +10,17 @@ import java.util.UUID;
 public class TilerSalesDTO {
 
     @NotNull
-    private UUID uuid;
+    private UUID tilerUuid;
     @NotEmpty
+    @Valid
     private Collection<TilerSalesDataDTO> tilerSalesData;
 
-    public UUID getUuid() {
-        return uuid;
+    public UUID getTilerUuid() {
+        return tilerUuid;
     }
 
-    public void setUuid(UUID uuid) {
-        this.uuid = uuid;
+    public void setTilerUuid(UUID tilerUuid) {
+        this.tilerUuid = tilerUuid;
     }
 
     public Collection<TilerSalesDataDTO> getTilerSalesData() {

@@ -56,7 +56,12 @@ public class TilerSalesRecord {
      * DB 生成的严格递增序列，用于快照边界
      * 由 PostgreSQL sequence + DEFAULT nextval(...) 负责
      */
-    @Column(name = "seq", nullable = false, updatable = false, insertable = false)
+    @Column(
+            name = "seq",
+            nullable = false,
+            updatable = false,
+            insertable = false
+    )
     private Long seq;
 
     public UUID getId() {

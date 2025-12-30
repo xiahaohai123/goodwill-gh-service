@@ -18,6 +18,7 @@ import com.wangkang.goodwillghservice.feature.audit.entity.Auditable;
 import com.wangkang.goodwillghservice.feature.k3cloud.model.customer.Customer;
 import com.wangkang.goodwillghservice.feature.k3cloud.service.K3cloudCustomerService;
 import com.wangkang.goodwillghservice.feature.tilersale.SaleAvailableDTO;
+import com.wangkang.goodwillghservice.feature.tilersale.SaleAvailableService;
 import com.wangkang.goodwillghservice.security.BuiltInPermissionGroup;
 import com.wangkang.goodwillghservice.share.util.BizAssert;
 import com.wangkang.goodwillghservice.share.util.DateUtil;
@@ -41,19 +42,22 @@ public class DistributorServiceImpl implements DistributorService {
     private final DistributorProfileRepository distributorProfileRepository;
     private final DistributorProfileHistoryRepository distributorProfileHistoryRepository;
     private final TilerSalesRecordRepository tilerSalesRecordRepository;
+    private final SaleAvailableService saleAvailableService;
 
     public DistributorServiceImpl(UserRepository userRepository,
                                   DistributorExternalInfoRepository distributorExternalInfoRepository,
                                   K3cloudCustomerService k3cloudCustomerService,
                                   DistributorProfileRepository distributorProfileRepository,
                                   DistributorProfileHistoryRepository distributorProfileHistoryRepository,
-                                  TilerSalesRecordRepository tilerSalesRecordRepository) {
+                                  TilerSalesRecordRepository tilerSalesRecordRepository,
+                                  SaleAvailableService saleAvailableService) {
         this.userRepository = userRepository;
         this.distributorExternalInfoRepository = distributorExternalInfoRepository;
         this.k3cloudCustomerService = k3cloudCustomerService;
         this.distributorProfileRepository = distributorProfileRepository;
         this.distributorProfileHistoryRepository = distributorProfileHistoryRepository;
         this.tilerSalesRecordRepository = tilerSalesRecordRepository;
+        this.saleAvailableService = saleAvailableService;
     }
 
     @Override
@@ -191,7 +195,7 @@ public class DistributorServiceImpl implements DistributorService {
 
     @Override
     public int recordTilerSale(UUID recorderId, TilerSalesDTO tilerSalesDTO) {
-        UUID tilerUserId = tilerSalesDTO.getUuid();
+        UUID tilerUserId = tilerSalesDTO.getTilerUuid();
         Collection<TilerSalesDataDTO> tilerSalesData = tilerSalesDTO.getTilerSalesData();
         Map<String, Integer> color2QuantityMap = new HashMap<>();
         // 合并重复花色记录，累加
@@ -199,8 +203,24 @@ public class DistributorServiceImpl implements DistributorService {
             Integer originalQuantity = color2QuantityMap.computeIfAbsent(data.getColorCode(), color -> 0);
             color2QuantityMap.put(data.getColorCode(), originalQuantity + data.getQuantity());
         });
-        // TODO 检查是否有这么多货可以记录
+        Collection<SaleAvailableDTO> saleAvailable = saleAvailableService.getSaleAvailable(recorderId);
+        // 转为 Map，便于按花色快速查找
+        Map<String, Integer> color2AvailableMap = saleAvailable.stream()
+                .collect(Collectors.toMap(
+                        SaleAvailableDTO::getColor,
+                        SaleAvailableDTO::getAvailable));
 
+        // 校验是否有足够库存
+        for (Map.Entry<String, Integer> entry : color2QuantityMap.entrySet()) {
+            String color = entry.getKey();
+            Integer requiredQuantity = entry.getValue();
+
+            Integer available = color2AvailableMap.getOrDefault(color, 0);
+            if (available < requiredQuantity) {
+                throw new IllegalStateException(String.format("库存不足：color=%s, required=%d, available=%d",
+                        color, requiredQuantity, available));
+            }
+        }
 
         OffsetDateTime createTime = DateUtil.currentDateTimeUTC();
         List<TilerSalesRecord> toSavedRecord = color2QuantityMap.entrySet().stream().map(data -> {

@@ -1,3 +1,10 @@
+CREATE SEQUENCE IF NOT EXISTS tiler_sales_record_seq
+    START WITH 1
+    INCREMENT BY 1
+    NO MINVALUE
+    NO MAXVALUE
+    CACHE 1;
+
 CREATE TABLE IF NOT EXISTS tiler_sales_record
 (
     id             UUID PRIMARY KEY     DEFAULT gen_random_uuid(),
@@ -15,7 +22,7 @@ CREATE TABLE IF NOT EXISTS tiler_sales_record
     -- 时间维度（非常关键）
     sale_time      TIMESTAMPTZ NOT NULL,                                      -- 实际成交时间
     created_at     TIMESTAMPTZ NOT NULL DEFAULT now(),
-    seq            BIGINT      NOT NULL DEFAULT nextval('tiler_sales_record') -- 序列，用于多线程环境下的增量计算，确保边界明晰
+    seq            BIGINT      NOT NULL DEFAULT nextval('tiler_sales_record_seq') -- 序列，用于多线程环境下的增量计算，确保边界明晰
 );
 
 CREATE INDEX IF NOT EXISTS idx_tiler_sales_tiler_time
