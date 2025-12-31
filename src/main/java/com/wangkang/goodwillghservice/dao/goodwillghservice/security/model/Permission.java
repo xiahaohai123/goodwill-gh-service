@@ -25,10 +25,10 @@ public enum Permission {
     TILER_QUERY,
     /** 贴砖工数据更新 */
     TILER_MODIFY,
-    /** 经销商用户自查权限 */
+    /** 经销商用户自查权限，例如查询自己的 profile，自己通过贴砖工卖出了多少产品，以及自己可以卖出的产品还有哪些 */
     DISTRIBUTOR_SELF_QUERY,
     /** 经销商用户对贴砖工销量的修改权限 */
     TILER_SALES_MODIFY,
-    /** 有限查询销售信息的权限，例如自己通过贴砖工卖出了多少产品，以及自己可以卖出的产品还有哪些 */
-    DISTRIBUTOR_SALES_LIMITED_QUERY,
+    /** 贴砖工用户自查权限，包括查询自己的积分，自己的积分记录等 */
+    TILER_SELF_QUERY,
 }

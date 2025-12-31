@@ -1,7 +1,7 @@
 package com.wangkang.goodwillghservice.feature.user.distributor;
 
 
-import com.wangkang.goodwillghservice.feature.tilersale.SaleAvailableDTO;
+import com.wangkang.goodwillghservice.feature.tilersale.model.SaleAvailableDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

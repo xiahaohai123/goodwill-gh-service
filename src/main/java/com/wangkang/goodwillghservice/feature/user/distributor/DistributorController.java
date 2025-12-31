@@ -1,8 +1,8 @@
 package com.wangkang.goodwillghservice.feature.user.distributor;
 
 
-import com.wangkang.goodwillghservice.feature.tilersale.SaleAvailableDTO;
-import com.wangkang.goodwillghservice.feature.tilersale.SaleAvailableService;
+import com.wangkang.goodwillghservice.feature.tilersale.model.SaleAvailableDTO;
+import com.wangkang.goodwillghservice.feature.tilersale.service.SaleAvailableService;
 import jakarta.validation.Valid;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;

@@ -1,4 +1,6 @@
-package com.wangkang.goodwillghservice.feature.tilersale;
+package com.wangkang.goodwillghservice.feature.tilersale.service;
+
+import com.wangkang.goodwillghservice.feature.tilersale.model.SaleAvailableDTO;
 
 import java.util.Collection;
 import java.util.UUID;

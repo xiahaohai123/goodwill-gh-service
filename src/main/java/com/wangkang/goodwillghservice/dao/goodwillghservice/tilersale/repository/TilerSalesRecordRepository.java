@@ -63,4 +63,8 @@ public interface TilerSalesRecordRepository extends JpaRepository<TilerSalesReco
 
     @Query("select max(t.seq) from TilerSalesRecord t WHERE t.distributorId = :distributorId")
     Long findMaxSeq(@Param("distributorId") UUID distributorId);
+
+    List<TilerSalesRecord> findAllByTilerId(UUID tilerId);
+
+    Page<TilerSalesRecord> findAllByTilerId(UUID tilerId, Pageable pageable);
 }

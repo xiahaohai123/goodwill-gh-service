@@ -37,8 +37,7 @@ UPDATE permission_group
 SET permissions = (SELECT jsonb_agg(DISTINCT elem)
                    FROM jsonb_array_elements(permissions || '[
                      "DISTRIBUTOR_SELF_QUERY",
-                     "TILER_SALES_MODIFY",
-                     "DISTRIBUTOR_SALES_LIMITED_QUERY"
+                     "TILER_SALES_MODIFY"
                    ]'::jsonb) AS t(elem))
 WHERE name = 'DISTRIBUTOR';
 
@@ -86,4 +85,11 @@ CREATE TABLE IF NOT EXISTS sale_available_snapshot
     created_at             TIMESTAMP WITH TIME ZONE NOT NULL DEFAULT NOW(),
     batch_id               UUID                     NOT NULL, -- 快照批次 id，方便按批次查询
     tiler_sales_record_seq BIGINT                   NOT NULL  -- 本次快照算到贴砖工销量的最大序列
-)
+);
+
+UPDATE permission_group
+SET permissions = (SELECT jsonb_agg(DISTINCT elem)
+                   FROM jsonb_array_elements(permissions || '[
+                     "TILER_SELF_QUERY"
+                   ]'::jsonb) AS t(elem))
+WHERE name = 'TILER';

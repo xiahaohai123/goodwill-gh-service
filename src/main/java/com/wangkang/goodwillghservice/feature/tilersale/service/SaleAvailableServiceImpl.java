@@ -1,4 +1,4 @@
-package com.wangkang.goodwillghservice.feature.tilersale;
+package com.wangkang.goodwillghservice.feature.tilersale.service;
 
 import com.wangkang.goodwillghservice.core.exception.I18nBusinessException;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.distributor.model.DistributorExternalInfo;
@@ -15,6 +15,7 @@ import com.wangkang.goodwillghservice.dao.goodwillghservice.tilersale.repository
 import com.wangkang.goodwillghservice.feature.audit.entity.ActionType;
 import com.wangkang.goodwillghservice.feature.audit.entity.Auditable;
 import com.wangkang.goodwillghservice.feature.k3cloud.model.OrderCloseStatus;
+import com.wangkang.goodwillghservice.feature.tilersale.model.SaleAvailableDTO;
 import com.wangkang.goodwillghservice.share.util.DateUtil;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;

@@ -1,6 +1,7 @@
 package com.wangkang.goodwillghservice.feature.tilersale;
 
 import com.wangkang.goodwillghservice.feature.audit.entity.SystemAuthenticated;
+import com.wangkang.goodwillghservice.feature.tilersale.service.SaleAvailableService;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.scheduling.annotation.Scheduled;

@@ -1,4 +1,4 @@
-package com.wangkang.goodwillghservice.feature.tilersale;
+package com.wangkang.goodwillghservice.feature.tilersale.model;
 
 import java.util.UUID;
 
