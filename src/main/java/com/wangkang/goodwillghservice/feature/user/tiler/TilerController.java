@@ -3,6 +3,8 @@ package com.wangkang.goodwillghservice.feature.user.tiler;
 
 import com.wangkang.goodwillghservice.feature.tilersale.model.TilerSalesRecordDTO;
 import com.wangkang.goodwillghservice.feature.tilersale.service.TilerSalesRecordService;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PagedResourcesAssembler;
@@ -19,6 +21,7 @@ import java.util.UUID;
 @RequestMapping("/api/tiler")
 public class TilerController {
 
+    private static final Log log = LogFactory.getLog(TilerController.class);
     private final TilerSalesRecordService tilerSalesRecordService;
 
     public TilerController(TilerSalesRecordService tilerSalesRecordService) {
@@ -41,5 +44,12 @@ public class TilerController {
         UUID uuid = UUID.fromString(principal.getName());
         Page<TilerSalesRecordDTO> recordPage = tilerSalesRecordService.getRecordPage(uuid, pageable);
         return ResponseEntity.ok().body(assembler.toModel(recordPage));
+    }
+
+    @PreAuthorize("hasAnyAuthority('TILER_SELF_QUERY')")
+    @GetMapping("/uuid")
+    public ResponseEntity<Object> getUUID(Principal principal) {
+        log.info("get uuid");
+        return ResponseEntity.ok(principal.getName());
     }
 }
