@@ -94,7 +94,7 @@ public class DistributorServiceImpl implements DistributorService {
             return;
         }
 
-        OffsetDateTime currentDateTimeUTC = DateUtil.currentDateTimeUTC();
+        OffsetDateTime currentDateTimeUTC = DateUtil.currentOffsetDateTimeUTC();
 
         // 2. 查询数据库中已有的 external distributor
         List<DistributorExternalInfo> existingList = distributorExternalInfoRepository.findAll();
@@ -222,7 +222,7 @@ public class DistributorServiceImpl implements DistributorService {
             }
         }
 
-        OffsetDateTime createTime = DateUtil.currentDateTimeUTC();
+        OffsetDateTime createTime = DateUtil.currentOffsetDateTimeUTC();
         List<TilerSalesRecord> toSavedRecord = color2QuantityMap.entrySet().stream().map(data -> {
             String color = data.getKey();
             Integer quantity = data.getValue();

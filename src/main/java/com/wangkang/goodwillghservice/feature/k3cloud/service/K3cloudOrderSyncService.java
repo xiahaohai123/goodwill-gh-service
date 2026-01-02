@@ -11,6 +11,7 @@ import org.springframework.util.CollectionUtils;
 
 import java.util.Collection;
 import java.util.List;
+import java.util.Set;
 
 /**
  * 为了确保分页事务注解生效，分出来的子类，方便 spring 代理
@@ -31,14 +32,22 @@ public class K3cloudOrderSyncService {
      * @return 保存的行数
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public int syncK3OrderPage(Collection<K3SaleOrder> orders) {
+    public int syncK3OrderPage(Collection<K3SaleOrder> orders, Set<String> processedBillNos) {
         if (CollectionUtils.isEmpty(orders)) {
             return 0;
         }
-        List<String> billNos = orders.stream()
+        List<String> billNosToClear = orders.stream()
                 .map(K3SaleOrder::getBillNo)
+                .distinct()
+                .filter(no -> !processedBillNos.contains(no)) // 过滤掉本轮已经删过的
                 .toList();
-        int deletedRows = k3SaleOrderRepository.deleteByBillNoIn(billNos);
+        // 执行删除，并加入已处理标记
+        int deletedRows = 0;
+        if (!billNosToClear.isEmpty()) {
+            deletedRows = k3SaleOrderRepository.deleteByBillNoIn(billNosToClear);
+            processedBillNos.addAll(billNosToClear);
+            log.info("Cleared " + billNosToClear.size() + " existing orders from DB to prepare for fresh sync");
+        }
 
         List<K3SaleOrder> savedOrders = k3SaleOrderRepository.saveAll(orders);
 

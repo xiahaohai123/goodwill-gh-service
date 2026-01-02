@@ -79,7 +79,7 @@ public class SaleAvailableServiceImpl implements SaleAvailableService {
         // 按经销商分页查询同步到本地的订单，条件是已关闭且关闭时长大于7天的订单
         DistributorExternalInfo externalDistributor = distributorProfile.getExternalDistributor();
         Integer distributorExternalId = externalDistributor.getExternalId();
-        OffsetDateTime closeDateBaseLine = DateUtil.currentDateTimeUTC().minusDays(7);
+        OffsetDateTime closeDateBaseLine = DateUtil.currentOffsetDateTimeUTC().minusDays(7);
 
         Map<String, Integer> colorAvailable = computeColorAvailable4Distributor(distributorExternalId,
                 availableSalesCalFrom, closeDateBaseLine);
@@ -215,7 +215,7 @@ public class SaleAvailableServiceImpl implements SaleAvailableService {
         Integer externalDistributorId = distributorProfile.getExternalDistributor().getExternalId();
         SaleAvailableSnapshot firstShot = snapshotList.getFirst();
         OffsetDateTime basedOnCloseTime = firstShot.getBasedOn();
-        OffsetDateTime beforeTime = DateUtil.currentDateTimeUTC().minusDays(7);
+        OffsetDateTime beforeTime = DateUtil.currentOffsetDateTimeUTC().minusDays(7);
         // 加算快照基线时间后的可纳入计算的金蝶云订单
         List<K3SaleOrder> updatedOrder = k3SaleOrderRepository.findByCustomerIdAndCloseDateGreaterThanEqualAndCloseDateLessThanAndCloseStatus(
                 externalDistributorId, basedOnCloseTime, beforeTime, OrderCloseStatus.CLOSED);
@@ -322,7 +322,7 @@ public class SaleAvailableServiceImpl implements SaleAvailableService {
         Integer externalDistributorId = distributorProfile.getExternalDistributor().getExternalId();
         SaleAvailableSnapshot firstShot = snapshotList.getFirst();
         OffsetDateTime basedOnCloseTime = firstShot.getBasedOn();
-        OffsetDateTime beforeTime = DateUtil.currentDateTimeUTC().minusDays(7);
+        OffsetDateTime beforeTime = DateUtil.currentOffsetDateTimeUTC().minusDays(7);
         // 加算快照基线时间后的可纳入计算的金蝶云订单
         List<K3SaleOrder> updatedOrder = k3SaleOrderRepository.findByCustomerIdAndCloseDateGreaterThanEqualAndCloseDateLessThanAndCloseStatus(
                 externalDistributorId, basedOnCloseTime, beforeTime, OrderCloseStatus.CLOSED);
@@ -342,7 +342,7 @@ public class SaleAvailableServiceImpl implements SaleAvailableService {
                                  UUID distributorId,
                                  OffsetDateTime beforeTime,
                                  long maxSeq) {
-        OffsetDateTime createTime = DateUtil.currentDateTimeUTC();
+        OffsetDateTime createTime = DateUtil.currentOffsetDateTimeUTC();
         UUID batchId = UUID.randomUUID();
         List<SaleAvailableSnapshot> toSaveSnapshotList = new ArrayList<>();
         for (Map.Entry<String, Integer> availableEntry : colorAvailable.entrySet()) {

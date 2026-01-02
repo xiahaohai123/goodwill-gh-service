@@ -33,7 +33,7 @@ public class K3cloudOrderServiceImpl implements K3cloudOrderService {
     /** 同步用的订单列 */
     private static final String ORDER_FIELD = "FBillNo, FCustId, FCustId.FNumber, FCustId.FName, FCreateDate, FDocumentStatus," +
             "FMaterialId.FNumber, FUnitID.FNumber, FQty, FReviewStatus, FReviewDate, FCloseStatus, FCloseDate, FModifyDate," +
-            "FStockBaseOutJoinQty";
+            "FStockBaseOutJoinQty, FSaleOrderEntry_FEntryID";
     private static final Log log = LogFactory.getLog(K3cloudOrderServiceImpl.class);
     private final K3cloudRequestService k3cloudRequestService;
     private final K3cloudOrderSyncService k3cloudOrderSyncService;
@@ -48,43 +48,56 @@ public class K3cloudOrderServiceImpl implements K3cloudOrderService {
     }
 
     @Override
-    public int syncModifiedOrder(long overlap) {
-        return doSyncModifiedOrder(overlap);
+    public int syncModifiedOrder(OffsetDateTime from, OffsetDateTime to) {
+        return doSyncModifiedOrder(from, to);
     }
 
     @Auditable(actionType = ActionType.K3_ORDER, actionName = "Synchronize k3 order")
     @Override
     public int syncModifiedOrderAndAudit(long overlap) {
-        return doSyncModifiedOrder(overlap);
+        OffsetDateTime startTime = DateUtil.utcNowMinusSeconds2CSTOffsetDateTime(overlap);
+        OffsetDateTime endTime = DateUtil.currentOffsetDateTimeCST();
+        return doSyncModifiedOrder(startTime, endTime);
     }
 
-    private int doSyncModifiedOrder(long overlap) {
-        // 循环更新数据
+    /**
+     * 执行基于修改时间的订单同步
+     * @param from 基于修改时间的同步起点
+     * @param to   基于修改时间的同步结束点
+     * @return 同步行数
+     */
+    private int doSyncModifiedOrder(OffsetDateTime from, OffsetDateTime to) {
+        // 转换为金蝶需要的北京时间字符串（固定住，不再在循环里动态生成）
+        String fromStr = DateUtil.formatOffsetDateTime2CSTYMDHMS(from);
+        String toStr = DateUtil.formatOffsetDateTime2CSTYMDHMS(to);
+        log.info("Start to sync modified order, from: " + fromStr + ", to: " + toStr + " (CST)");
         int startIndex = 0;
         int limit = 2000;
-        Collection<K3SaleOrder> page;
         int updatedRows = 0;
+        Collection<K3SaleOrder> page;
+
+        // 关键：在循环外维护一个本轮已处理（已删除）的单据号集合
+        Set<String> processedBillNos = new HashSet<>();
+
         do {
-            page = getOrderByLastModifiedDateFrom(overlap, startIndex, limit);
+            // 将 from 和 to 传给查询方法
+            page = getOrderByDateRange(fromStr, toStr, startIndex, limit);
             if (!page.isEmpty()) {
-                int savedRows = k3cloudOrderSyncService.syncK3OrderPage(page);// 分页级事务
-                updatedRows += savedRows;
+                updatedRows += k3cloudOrderSyncService.syncK3OrderPage(page, processedBillNos);
             }
             startIndex += limit;
         } while (page.size() == limit);
 
-        log.info("[Sync Summary]: Updated " + updatedRows + " rows for k3 sale order");
         return updatedRows;
     }
 
-    private List<K3SaleOrder> getOrderByLastModifiedDateFrom(long overlap, int startIndex, int limit) {
-        String currentFilterString = BASE_ORDER_FILTER;
-        String endTime = DateUtil.utcNowMinusSecondsToBeijingFormatted(overlap);
+    private List<K3SaleOrder> getOrderByDateRange(String fromStr, String toStr, int startIndex, int limit) {
+        // 增加 FModifyDate <= toStr 的限制，确保本次同步范围是闭合的
+        String filter = String.format("%s and FModifyDate >= '%s' and FModifyDate <= '%s'",
+                BASE_ORDER_FILTER, fromStr, toStr);
 
-        currentFilterString += " and FModifyDate >= '" + endTime + "'";
-        List<Map<String, Object>> orderMapList;
-        orderMapList = k3cloudRequestService.billQueryOrderFieldsByFilter(currentFilterString, ORDER_FIELD, startIndex,
-                limit);
+        List<Map<String, Object>> orderMapList = k3cloudRequestService
+                .billQueryOrderFieldsByFilter(filter, ORDER_FIELD, startIndex, limit);
         return map2K3SaleOrder(orderMapList);
     }
 

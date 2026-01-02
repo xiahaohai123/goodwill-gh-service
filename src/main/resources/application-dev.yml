@@ -5,7 +5,7 @@ app:
   cookie-secure: false
 logging:
   level:
-    root: debug
+    root: info
 
 
 

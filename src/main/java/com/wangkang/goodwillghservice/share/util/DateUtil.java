@@ -3,6 +3,7 @@ package com.wangkang.goodwillghservice.share.util;
 import org.apache.commons.lang3.StringUtils;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.jetbrains.annotations.NotNull;
 
 import java.time.*;
 import java.time.format.DateTimeFormatter;
@@ -20,6 +21,9 @@ public class DateUtil {
 
     public static final String PATTERN_YYYY_MM_DD_DASH_SEP = "yyyy-MM-dd";
     public static final String PATTERN_YYYY_MM_DASH_SEP = "yyyy-MM";
+
+    // 定义北京时间（CST）的偏移量
+    private static final ZoneOffset CST_OFFSET = ZoneOffset.ofHours(8);
 
     private static final DateTimeFormatter DATE_TIME_FORMATTER = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss");
     private static final DateTimeFormatter DATE_PARSER = new DateTimeFormatterBuilder()
@@ -64,7 +68,7 @@ public class DateUtil {
      * 获取 UTC 时区的当前时间
      * @return 时间信息
      */
-    public static OffsetDateTime currentDateTimeUTC() {
+    public static OffsetDateTime currentOffsetDateTimeUTC() {
         return OffsetDateTime.now(ZoneOffset.UTC);
     }
 
@@ -89,10 +93,21 @@ public class DateUtil {
         LocalDateTime localBeijing = beijingDateTime.toLocalDateTime();
 
         // 5. 返回 ISO 格式
-        return localBeijing.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));  // 输出：2025-11-02 08:00:00
+        return localBeijing.format(DATE_TIME_FORMATTER);  // 输出：2025-11-02 08:00:00
     }
 
     public static String utcNowMinusSecondsToBeijingFormatted(long overlapSeconds) {
+        OffsetDateTime beijingDateTime = utcNowMinusSeconds2CSTOffsetDateTime(overlapSeconds);
+
+        // 4. 去掉时区，仅保留 LocalDateTime
+        LocalDateTime localBeijing = beijingDateTime.toLocalDateTime();
+
+        // 5. 格式化输出
+        return localBeijing.format(DATE_TIME_FORMATTER);
+    }
+
+    @NotNull
+    public static OffsetDateTime utcNowMinusSeconds2CSTOffsetDateTime(long overlapSeconds) {
         // 1. 获取当前 UTC 时间
         OffsetDateTime utcNow = OffsetDateTime.now(ZoneOffset.UTC);
 
@@ -101,13 +116,27 @@ public class DateUtil {
 
         // 3. 转换为北京时间
         ZoneId beijingZone = ZoneId.of("Asia/Shanghai");
-        OffsetDateTime beijingDateTime = utcTarget.atZoneSameInstant(beijingZone).toOffsetDateTime();
+        return utcTarget.atZoneSameInstant(beijingZone).toOffsetDateTime();
+    }
 
-        // 4. 去掉时区，仅保留 LocalDateTime
-        LocalDateTime localBeijing = beijingDateTime.toLocalDateTime();
+    public static OffsetDateTime currentOffsetDateTimeCST() {
+        return OffsetDateTime.now(ZoneOffset.ofHours(8));
+    }
 
-        // 5. 格式化输出
-        return localBeijing.format(DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss"));
+    public static String formatOffsetDateTime2CSTYMDHMS(OffsetDateTime offsetDateTime) {
+        if (offsetDateTime == null) {
+            return null;
+        }
+        // 使用 withOffsetSameInstant 将时间点转换到 UTC+8 偏移量
+        return offsetDateTime.withOffsetSameInstant(CST_OFFSET)
+                .format(DATE_TIME_FORMATTER);
+    }
+
+    public static String formatOffsetDateTime2YMDHMS(OffsetDateTime offsetDateTime) {
+        if (offsetDateTime == null) {
+            return null;
+        }
+        return offsetDateTime.format(DATE_TIME_FORMATTER);
     }
 
 

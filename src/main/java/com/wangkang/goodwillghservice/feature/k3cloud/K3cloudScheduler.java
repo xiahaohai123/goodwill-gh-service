@@ -1,12 +1,15 @@
 package com.wangkang.goodwillghservice.feature.k3cloud;
 
+import com.wangkang.goodwillghservice.core.SysParamService;
 import com.wangkang.goodwillghservice.feature.audit.entity.SystemAuthenticated;
 import com.wangkang.goodwillghservice.feature.k3cloud.service.K3cloudOrderService;
+import com.wangkang.goodwillghservice.share.util.DateUtil;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.scheduling.annotation.Scheduled;
 import org.springframework.stereotype.Component;
 
+import java.time.OffsetDateTime;
 import java.util.Optional;
 
 @Component
@@ -17,51 +20,59 @@ public class K3cloudScheduler {
     private final K3cloudOrderService k3cloudOrderService;
     private final K3cloudSyncExecutor k3cloudSyncExecutor;
 
-    // 默认覆盖时间范围，单位秒
-    private static final int DEFAULT_OVERLAP = 90;
-    // 最长覆盖时间范围
-    private static final long MAX_OVERLAP = 3600; // 1 hour
-    // 失败次数，用于下一次同步任务补偿时间范围
-    private int failedTimes = 0;
+    private static final String SYNC_KEY = "K3CLOUD_LAST_SYNC_TIME";
+    private final SysParamService sysParamService;
+    // 冗余缓冲时间（秒），处理金蝶系统事务提交延迟导致的漏单
+    private static final int BUFFER_SECONDS = 60;
 
-    public K3cloudScheduler(K3cloudOrderService k3cloudOrderService, K3cloudSyncExecutor k3cloudSyncExecutor) {
+    public K3cloudScheduler(K3cloudOrderService k3cloudOrderService, K3cloudSyncExecutor k3cloudSyncExecutor,
+                            SysParamService sysParamService) {
         this.k3cloudOrderService = k3cloudOrderService;
         this.k3cloudSyncExecutor = k3cloudSyncExecutor;
+        this.sysParamService = sysParamService;
     }
 
     @SystemAuthenticated
     @Scheduled(cron = "0 * * * * *", zone = "UTC")
     public void syncK3CloudOrder() {
         log.info("Started to synchronize k3 cloud order");
-        long overlap = Math.min((long) (1 + failedTimes) * DEFAULT_OVERLAP, MAX_OVERLAP);
+        // 1. 获取上次同步成功的终点（从数据库读取）
+        OffsetDateTime lastSyncTime = sysParamService.getOffsetDateTime(SYNC_KEY);
+
+        // 2. 确定本次同步的物理终点（取当前时间且需要使用 CST 时间）
+        OffsetDateTime currentTime = DateUtil.currentOffsetDateTimeUTC();
+
+        // 3. 计算实际查询范围（带上冗余 buffer）
+        // 哪怕上次同步到 10:00，这次我们从 09:59 开始查，确保边缘数据不丢失
+        OffsetDateTime searchFrom = lastSyncTime.minusSeconds(BUFFER_SECONDS);
 
         Optional<Integer> result;
         try {
-            result = k3cloudSyncExecutor.tryExecuteOnce(() -> k3cloudOrderService.syncModifiedOrder(overlap));
+            result = k3cloudSyncExecutor.tryExecuteOnce(() ->
+                    k3cloudOrderService.syncModifiedOrder(searchFrom, currentTime)
+            );
         } catch (Exception e) {
-            // 已拿到锁，但业务执行失败
-            failedTimes++;
-            log.warn("K3 cloud sync failed, overlap=" + overlap, e);
-            return;
-        }
-        if (result.isEmpty()) {
-            // 没拿到锁
-            failedTimes++;
-            log.info("Sync skipped due to lock contention, failedTimes=" + failedTimes);
+            // 已拿到锁，但业务执行失败：数据库不更新，下次执行依然从当前的 lastSyncTime 开始
+            log.error("K3 cloud sync failed, window: [" + searchFrom + " TO " + currentTime + "]", e);
             return;
         }
 
-        // 成功执行
-        int synced = result.get();
-        log.info("Sync finished, synced rows=" + synced);
+        if (result.isPresent()) {
+            // 4. 执行成功
+            int synced = result.get();
+            log.info("Sync finished, synced rows=" + synced + ". Updating baseline to: " + currentTime);
 
-        // 成功一次必须归零
-        failedTimes = 0;
+            // 5. 只有成功后才更新数据库基线
+            sysParamService.updateParam(SYNC_KEY, currentTime);
+        } else {
+            // 没拿到锁（其他节点在跑）
+            log.info("Sync skipped due to lock contention.");
+        }
     }
 
     @SystemAuthenticated
     @Scheduled(cron = "0 10 * * * *", zone = "UTC")
-    public void syncK3CloudDeletedOrder(){
+    public void syncK3CloudDeletedOrder() {
         k3cloudOrderService.syncDeletedOrder();
     }
 }
