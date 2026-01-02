@@ -36,6 +36,10 @@ spring:
   messages:
     basename: i18n/messages
     encoding: UTF-8
+  task:
+    scheduling:
+      pool:
+        size: 5  # 根据你的任务数量和频率，通常设置为 5-10 足够
 invitation:
   valid:
     days: ${INVITATION_VALID_DAYS:7}
