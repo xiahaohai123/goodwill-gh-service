@@ -60,6 +60,16 @@ public class K3cloudRequestServiceImpl implements K3cloudRequestService {
     @Override
     public List<Map<String, Object>> billQueryOrderFieldsByFilter(String filterString,
                                                                   String fieldKeys,
+                                                                  String orderString,
+                                                                  Integer startRow,
+                                                                  Integer limit) {
+        return billQueryFieldsByFilterSaleOrganization(FormType.SALE_ORDER, filterString, fieldKeys, orderString,
+                startRow, limit);
+    }
+
+    @Override
+    public List<Map<String, Object>> billQueryOrderFieldsByFilter(String filterString,
+                                                                  String fieldKeys,
                                                                   Integer startRow,
                                                                   Integer limit) {
         return billQueryFieldsByFilterSaleOrganization(FormType.SALE_ORDER, filterString, fieldKeys, startRow, limit);
@@ -92,6 +102,16 @@ public class K3cloudRequestServiceImpl implements K3cloudRequestService {
                                                                     Integer limit) {
         return billQueryFieldsByFilterSaleOrganization(FormType.SALE_OUT_STOCK, filterString, fieldKeys, startRow,
                 limit);
+    }
+
+    private List<Map<String, Object>> billQueryFieldsByFilterSaleOrganization(FormType formType,
+                                                                              String filterString,
+                                                                              String fieldKeys,
+                                                                              String orderString,
+                                                                              Integer startRow,
+                                                                              Integer limit) {
+        String currentFilterString = addSaleOrgId(filterString);
+        return billQueryFieldsByFilter(formType, currentFilterString, fieldKeys, orderString, startRow, limit);
     }
 
     private List<Map<String, Object>> billQueryFieldsByFilterSaleOrganization(FormType formType,
@@ -141,6 +161,16 @@ public class K3cloudRequestServiceImpl implements K3cloudRequestService {
                                                              String fieldKeys,
                                                              Integer startRow,
                                                              Integer limit) {
+        return billQueryFieldsByFilter(formType, filterString, fieldKeys, null, startRow, limit);
+    }
+
+    @Override
+    public List<Map<String, Object>> billQueryFieldsByFilter(FormType formType,
+                                                             String filterString,
+                                                             String fieldKeys,
+                                                             String orderString,
+                                                             Integer startRow,
+                                                             Integer limit) {
         if (StringUtils.isBlank(fieldKeys)) {
             return Collections.emptyList();
         }
@@ -148,42 +178,53 @@ public class K3cloudRequestServiceImpl implements K3cloudRequestService {
         JsonObject dataObject = new JsonObject();
         dataObject.addProperty("FormId", formType.getId());
         dataObject.addProperty("FieldKeys", fieldKeys);
+
+        // 处理过滤条件
         if (StringUtils.isNotBlank(filterString)) {
             dataObject.addProperty("FilterString", filterString);
         }
+
+        // 新增：处理排序条件
+        if (StringUtils.isNotBlank(orderString)) {
+            dataObject.addProperty("OrderString", orderString);
+        }
+
         if (startRow != null) {
             dataObject.addProperty("startRow", startRow);
         }
         if (limit != null) {
             dataObject.addProperty("limit", limit);
         }
+
         String queryJson = dataObject.toString();
         log.debug("Execute Bill Query, queryJson: " + queryJson);
+
         List<List<Object>> materialObjectListList;
         try {
             materialObjectListList = client.executeBillQuery(queryJson);
         } catch (Exception e) {
             throw new K3cloudBusinessException("Failed to execute bill query", e);
         }
+
         String failedResult = getFailedResult(materialObjectListList);
         if (StringUtils.isNotBlank(failedResult)) {
             throw new K3cloudBusinessException("Failed to execute bill query, reason: " + failedResult);
         }
+
         String[] keys = Arrays.stream(fieldKeys.split(","))
                 .map(String::trim)
                 .toArray(String[]::new);
+
         return materialObjectListList
                 .stream()
-                .map(materialObjectList ->
-                        {
-                            Map<String, Object> map = new HashMap<>();
-                            int len = Math.min(keys.length, materialObjectList.size());
-                            for (int i = 0; i < len; i++) {
-                                map.put(keys[i], materialObjectList.get(i));
-                            }
-                            return map;
-                        }
-                )
+                .map(materialObjectList -> {
+                    Map<String, Object> map = new HashMap<>();
+                    int len = Math.min(keys.length, materialObjectList.size());
+                    for (int i = 0; i < len; i++) {
+                        map.put(keys[i], materialObjectList.get(i));
+                    }
+                    return map;
+                })
                 .toList();
     }
 

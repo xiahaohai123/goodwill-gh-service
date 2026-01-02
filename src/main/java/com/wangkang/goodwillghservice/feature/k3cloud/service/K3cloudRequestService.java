@@ -15,10 +15,24 @@ public interface K3cloudRequestService {
      */
     List<Map<String, Object>> billQueryOrderFieldsByFilter(String filterString, String fieldKeys);
 
+
+    List<Map<String, Object>> billQueryOrderFieldsByFilter(String filterString,
+                                                           String fieldKeys,
+                                                           String orderString,
+                                                           Integer startRow,
+                                                           Integer limit);
+
     List<Map<String, Object>> billQueryOrderFieldsByFilter(String filterString,
                                                            String fieldKeys,
                                                            Integer startRow,
                                                            Integer limit);
+
+    List<Map<String, Object>> billQueryFieldsByFilter(FormType formType,
+                                                      String filterString,
+                                                      String fieldKeys,
+                                                      String orderString,
+                                                      Integer startRow,
+                                                      Integer limit);
 
 
     /**

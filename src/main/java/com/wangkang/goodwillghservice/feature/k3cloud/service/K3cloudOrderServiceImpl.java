@@ -95,9 +95,9 @@ public class K3cloudOrderServiceImpl implements K3cloudOrderService {
         // 增加 FModifyDate <= toStr 的限制，确保本次同步范围是闭合的
         String filter = String.format("%s and FModifyDate >= '%s' and FModifyDate <= '%s'",
                 BASE_ORDER_FILTER, fromStr, toStr);
-
+        String orderString = "FModifyDate ASC, FID ASC, FSaleOrderEntry_FEntryID ASC";
         List<Map<String, Object>> orderMapList = k3cloudRequestService
-                .billQueryOrderFieldsByFilter(filter, ORDER_FIELD, startIndex, limit);
+                .billQueryOrderFieldsByFilter(filter, ORDER_FIELD, orderString, startIndex, limit);
         return map2K3SaleOrder(orderMapList);
     }
 
