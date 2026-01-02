@@ -4,10 +4,7 @@ import com.wangkang.goodwillghservice.dao.goodwillghservice.order.model.K3SaleOr
 import com.wangkang.goodwillghservice.dao.goodwillghservice.order.repository.K3SaleOrderRepository;
 import com.wangkang.goodwillghservice.feature.audit.entity.ActionType;
 import com.wangkang.goodwillghservice.feature.audit.entity.Auditable;
-import com.wangkang.goodwillghservice.feature.k3cloud.model.OrderBillType;
-import com.wangkang.goodwillghservice.feature.k3cloud.model.OrderCloseStatus;
-import com.wangkang.goodwillghservice.feature.k3cloud.model.OrderDocumentStatus;
-import com.wangkang.goodwillghservice.feature.k3cloud.model.OrderVerifyStatus;
+import com.wangkang.goodwillghservice.feature.k3cloud.model.*;
 import com.wangkang.goodwillghservice.share.util.ChoreUtil;
 import com.wangkang.goodwillghservice.share.util.DateUtil;
 import org.apache.commons.lang3.StringUtils;
@@ -48,13 +45,13 @@ public class K3cloudOrderServiceImpl implements K3cloudOrderService {
     }
 
     @Override
-    public int syncModifiedOrder(OffsetDateTime from, OffsetDateTime to) {
+    public K3SyncResult syncModifiedOrder(OffsetDateTime from, OffsetDateTime to) {
         return doSyncModifiedOrder(from, to);
     }
 
     @Auditable(actionType = ActionType.K3_ORDER, actionName = "Synchronize k3 order")
     @Override
-    public int syncModifiedOrderAndAudit(long overlap) {
+    public K3SyncResult syncModifiedOrderAndAudit(long overlap) {
         OffsetDateTime startTime = DateUtil.utcNowMinusSeconds2CSTOffsetDateTime(overlap);
         OffsetDateTime endTime = DateUtil.currentOffsetDateTimeCST();
         return doSyncModifiedOrder(startTime, endTime);
@@ -66,14 +63,15 @@ public class K3cloudOrderServiceImpl implements K3cloudOrderService {
      * @param to   基于修改时间的同步结束点
      * @return 同步行数
      */
-    private int doSyncModifiedOrder(OffsetDateTime from, OffsetDateTime to) {
+    private K3SyncResult doSyncModifiedOrder(OffsetDateTime from, OffsetDateTime to) {
         // 转换为金蝶需要的北京时间字符串（固定住，不再在循环里动态生成）
         String fromStr = DateUtil.formatOffsetDateTime2CSTYMDHMS(from);
         String toStr = DateUtil.formatOffsetDateTime2CSTYMDHMS(to);
         log.info("Start to sync modified order, from: " + fromStr + ", to: " + toStr + " (CST)");
         int startIndex = 0;
         int limit = 2000;
-        int updatedRows = 0;
+        int deleteRows = 0;
+        int savedRows = 0;
         Collection<K3SaleOrder> page;
 
         // 关键：在循环外维护一个本轮已处理（已删除）的单据号集合
@@ -83,12 +81,15 @@ public class K3cloudOrderServiceImpl implements K3cloudOrderService {
             // 将 from 和 to 传给查询方法
             page = getOrderByDateRange(fromStr, toStr, startIndex, limit);
             if (!page.isEmpty()) {
-                updatedRows += k3cloudOrderSyncService.syncK3OrderPage(page, processedBillNos);
+                K3SyncResult syncResult = k3cloudOrderSyncService.syncK3OrderPage(page, processedBillNos);
+                savedRows += syncResult.savedRows();
+                deleteRows += syncResult.deletedRows();
             }
             startIndex += limit;
         } while (page.size() == limit);
-
-        return updatedRows;
+        log.info("total deleted rows: " + deleteRows);
+        log.info("total saved rows: " + savedRows);
+        return new K3SyncResult(deleteRows, savedRows);
     }
 
     private List<K3SaleOrder> getOrderByDateRange(String fromStr, String toStr, int startIndex, int limit) {

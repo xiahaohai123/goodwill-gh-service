@@ -2,6 +2,7 @@ package com.wangkang.goodwillghservice.feature.k3cloud;
 
 import com.wangkang.goodwillghservice.core.SysParamService;
 import com.wangkang.goodwillghservice.feature.audit.entity.SystemAuthenticated;
+import com.wangkang.goodwillghservice.feature.k3cloud.model.K3SyncResult;
 import com.wangkang.goodwillghservice.feature.k3cloud.service.K3cloudOrderService;
 import com.wangkang.goodwillghservice.share.util.DateUtil;
 import org.apache.commons.logging.Log;
@@ -46,7 +47,7 @@ public class K3cloudScheduler {
         // 哪怕上次同步到 10:00，这次我们从 09:59 开始查，确保边缘数据不丢失
         OffsetDateTime searchFrom = lastSyncTime.minusSeconds(BUFFER_SECONDS);
 
-        Optional<Integer> result;
+        Optional<K3SyncResult> result;
         try {
             result = k3cloudSyncExecutor.tryExecuteOnce(() ->
                     k3cloudOrderService.syncModifiedOrder(searchFrom, currentTime)
@@ -59,9 +60,9 @@ public class K3cloudScheduler {
 
         if (result.isPresent()) {
             // 4. 执行成功
-            int synced = result.get();
-            log.info("Sync finished, synced rows=" + synced + ". Updating baseline to: " + currentTime);
-
+            K3SyncResult k3SyncResult = result.get();
+            log.info(
+                    "Sync finished, synced rows=" + k3SyncResult.savedRows() + ". Updating baseline to: " + currentTime);
             // 5. 只有成功后才更新数据库基线
             sysParamService.updateParam(SYNC_KEY, currentTime);
         } else {

@@ -1,6 +1,7 @@
 package com.wangkang.goodwillghservice.feature.k3cloud;
 
 
+import com.wangkang.goodwillghservice.feature.k3cloud.model.K3SyncResult;
 import com.wangkang.goodwillghservice.feature.k3cloud.service.K3cloudOrderService;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -29,7 +30,7 @@ public class K3cloudOrderController {
     @PreAuthorize("hasAnyAuthority('DEBUG')")
     @PutMapping("/{overlap}")
     public ResponseEntity<Object> syncModifiedOrder(@PathVariable long overlap) {
-        Optional<Integer> result;
+        Optional<K3SyncResult> result;
 
         try {
             result = k3cloudSyncExecutor.executeWithRetry(

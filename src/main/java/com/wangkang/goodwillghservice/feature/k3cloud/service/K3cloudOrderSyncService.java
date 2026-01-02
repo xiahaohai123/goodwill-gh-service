@@ -2,6 +2,7 @@ package com.wangkang.goodwillghservice.feature.k3cloud.service;
 
 import com.wangkang.goodwillghservice.dao.goodwillghservice.order.model.K3SaleOrder;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.order.repository.K3SaleOrderRepository;
+import com.wangkang.goodwillghservice.feature.k3cloud.model.K3SyncResult;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
 import org.springframework.stereotype.Service;
@@ -32,9 +33,9 @@ public class K3cloudOrderSyncService {
      * @return 保存的行数
      */
     @Transactional(propagation = Propagation.REQUIRES_NEW)
-    public int syncK3OrderPage(Collection<K3SaleOrder> orders, Set<String> processedBillNos) {
+    public K3SyncResult syncK3OrderPage(Collection<K3SaleOrder> orders, Set<String> processedBillNos) {
         if (CollectionUtils.isEmpty(orders)) {
-            return 0;
+            return new K3SyncResult(0, 0);
         }
         List<String> billNosToClear = orders.stream()
                 .map(K3SaleOrder::getBillNo)
@@ -54,6 +55,6 @@ public class K3cloudOrderSyncService {
         log.info("Deleted " + deletedRows + " rows k3 orders");
         int savedRows = savedOrders.size();
         log.info("Saved " + savedRows + " rows k3 orders");
-        return savedRows;
+        return new K3SyncResult(deletedRows, savedRows);
     }
 }

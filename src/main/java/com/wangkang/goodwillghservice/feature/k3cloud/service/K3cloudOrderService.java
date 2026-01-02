@@ -1,5 +1,7 @@
 package com.wangkang.goodwillghservice.feature.k3cloud.service;
 
+import com.wangkang.goodwillghservice.feature.k3cloud.model.K3SyncResult;
+
 import java.time.OffsetDateTime;
 
 public interface K3cloudOrderService {
@@ -14,7 +16,7 @@ public interface K3cloudOrderService {
      * @return 同步订单行数，一行和金蝶云的订单行一致，一个订单可以有多行分录组成
      * @see K3cloudOrderService#syncModifiedOrderAndAudit(long) 会记录审计日志的同类方法
      */
-    int syncModifiedOrder(OffsetDateTime from, OffsetDateTime to);
+    K3SyncResult syncModifiedOrder(OffsetDateTime from, OffsetDateTime to);
 
     /**
      * 从金蝶云同步修改的订单
@@ -25,7 +27,7 @@ public interface K3cloudOrderService {
      * @return 同步订单行数，一行和金蝶云的订单行一致，一个订单可以有多行分录组成
      * @see K3cloudOrderService#syncModifiedOrder(OffsetDateTime, OffsetDateTime)  不记录审计日志的同类方法
      */
-    int syncModifiedOrderAndAudit(long overlap);
+    K3SyncResult syncModifiedOrderAndAudit(long overlap);
 
     /**
      * 检查未关闭的订单，是否有被取消或者删除，基于订单编号查询金蝶云上是否仍然存在订单，比较查出来不存在的订单进行删除
