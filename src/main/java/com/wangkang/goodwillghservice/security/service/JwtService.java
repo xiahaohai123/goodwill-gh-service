@@ -16,7 +16,7 @@ import java.util.List;
 @Service
 public class JwtService {
 
-    private static final long EXPIRATION_MS = 12L * 3600L * 1000L;
+    private static final long EXPIRATION_MS = 24L * 3600L * 1000L;
 
     @Value("${JWT_SECRET:key}")
     private String secretKey;
