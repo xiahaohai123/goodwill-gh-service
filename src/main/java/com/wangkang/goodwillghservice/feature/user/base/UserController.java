@@ -67,4 +67,10 @@ public class UserController {
         userService.updatePassword(dto, principal);
         return ResponseEntity.noContent().build();
     }
+
+    @GetMapping("/invitation/profile/{invitationCode}")
+    public ResponseEntity<Object> getInvitationProfile(@PathVariable String invitationCode) {
+        Invitation invitation = invitationService.validateInvitation(invitationCode);
+        return ResponseEntity.ok(invitation);
+    }
 }
