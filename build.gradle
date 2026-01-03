@@ -50,6 +50,13 @@ dependencies {
     testImplementation 'org.springframework.boot:spring-boot-starter-test'
     testImplementation 'org.springframework.security:spring-security-test'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    // https://mvnrepository.com/artifact/org.apache.poi/poi
+    implementation("org.apache.poi:poi:5.5.1")
+    // 必须：处理 .xlsx 格式的核心支持
+    implementation("org.apache.poi:poi-ooxml:5.5.1")
+
+    // 建议：如果你需要更完整的架构支持或处理复杂的 OOXML 对象
+    implementation("org.apache.poi:poi-ooxml-full:5.5.1")
 }
 
 tasks.named('test') {
