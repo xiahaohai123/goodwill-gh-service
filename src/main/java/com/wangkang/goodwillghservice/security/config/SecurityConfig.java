@@ -1,5 +1,6 @@
 package com.wangkang.goodwillghservice.security.config;
 
+import com.wangkang.goodwillghservice.security.SecurityConstants;
 import com.wangkang.goodwillghservice.security.filter.JwtAuthenticationFilter;
 import com.wangkang.goodwillghservice.security.service.CustomUserDetailsService;
 import com.wangkang.goodwillghservice.security.service.JwtService;
@@ -57,9 +58,7 @@ public class SecurityConfig {
                 .addFilterBefore(jwtAuthenticationFilter(), UsernamePasswordAuthenticationFilter.class)
                 .authorizeHttpRequests(authorizationManagerRequestMatcherRegistry ->
                         authorizationManagerRequestMatcherRegistry
-                                .requestMatchers("/api/auth/login").permitAll()
-                                .requestMatchers("/api/user/register").permitAll()
-                                .requestMatchers("/api/download").permitAll()
+                                .requestMatchers(SecurityConstants.WHITE_LIST.toArray(String[]::new)).permitAll()
                                 .anyRequest().authenticated())
                 .sessionManagement(session -> session.sessionCreationPolicy(SessionCreationPolicy.STATELESS));
         return http.build();

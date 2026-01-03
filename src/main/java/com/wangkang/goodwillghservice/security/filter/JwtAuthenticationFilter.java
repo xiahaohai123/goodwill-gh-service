@@ -1,6 +1,7 @@
 package com.wangkang.goodwillghservice.security.filter;
 
 import com.auth0.jwt.exceptions.JWTVerificationException;
+import com.wangkang.goodwillghservice.security.SecurityConstants;
 import com.wangkang.goodwillghservice.security.entity.CustomAuthenticationToken;
 import com.wangkang.goodwillghservice.security.entity.CustomUserDetails;
 import com.wangkang.goodwillghservice.security.service.CustomUserDetailsService;
@@ -13,12 +14,16 @@ import jakarta.servlet.http.HttpServletResponse;
 import jakarta.validation.constraints.NotNull;
 import org.apache.commons.logging.Log;
 import org.apache.commons.logging.LogFactory;
+import org.springframework.http.server.PathContainer;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.core.GrantedAuthority;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.filter.OncePerRequestFilter;
+import org.springframework.web.util.pattern.PathPattern;
+import org.springframework.web.util.pattern.PathPatternParser;
 
 import java.io.IOException;
+import java.util.List;
 import java.util.Set;
 
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
@@ -26,17 +31,16 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     private final JwtService jwtService;
     private final CustomUserDetailsService customUserDetailsService;
-
-    private static final Set<String> WHITE_LIST = Set.of(
-            "/api/download",
-            "/api/auth/login",
-            "/api/user/register"
-    );
+    private final List<PathPattern> whiteListPatterns;
 
     public JwtAuthenticationFilter(JwtService jwtService,
                                    CustomUserDetailsService customUserDetailsService) {
         this.jwtService = jwtService;
         this.customUserDetailsService = customUserDetailsService;
+        PathPatternParser parser = new PathPatternParser();
+        this.whiteListPatterns = SecurityConstants.WHITE_LIST.stream()
+                .map(parser::parse)
+                .toList();
     }
 
     @Override
@@ -49,7 +53,10 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         String token = extractToken(request);
         if (token == null) {
             log.info("Missing token when request: " + path);
-            response.sendError(HttpServletResponse.SC_UNAUTHORIZED, "Token is missing");
+            response.setStatus(HttpServletResponse.SC_UNAUTHORIZED);
+            response.setContentType("application/json;charset=UTF-8");
+            response.getWriter().write("{\"error\":\"Token is missing\"}");
+            response.getWriter().flush(); // 必须 flush 才能确保立即返回
             return;
         }
         try {
@@ -88,8 +95,8 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
 
     @Override
     protected boolean shouldNotFilter(HttpServletRequest request) {
-        String path = request.getRequestURI();
-        // 如果是登录接口，跳过本过滤器
-        return WHITE_LIST.contains(path);
+        // PathPattern 匹配的是 PathContainer
+        PathContainer path = PathContainer.parsePath(request.getRequestURI());
+        return whiteListPatterns.stream().anyMatch(pattern -> pattern.matches(path));
     }
 }
