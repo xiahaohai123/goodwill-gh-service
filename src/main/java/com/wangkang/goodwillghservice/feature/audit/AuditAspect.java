@@ -3,8 +3,13 @@ package com.wangkang.goodwillghservice.feature.audit;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.audit.model.OperationLog;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.audit.repository.OperationLogRepository;
 import com.wangkang.goodwillghservice.feature.audit.entity.*;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.aspectj.lang.JoinPoint;
-import org.aspectj.lang.annotation.*;
+import org.aspectj.lang.ProceedingJoinPoint;
+import org.aspectj.lang.annotation.Around;
+import org.aspectj.lang.annotation.Aspect;
+import org.aspectj.lang.annotation.Pointcut;
 import org.aspectj.lang.reflect.MethodSignature;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.annotation.Order;
@@ -28,7 +33,7 @@ import java.util.UUID;
 @Order(10)
 public class AuditAspect {
 
-    private final ThreadLocal<OffsetDateTime> startTime = new ThreadLocal<>();
+    private static final Log log = LogFactory.getLog(AuditAspect.class);
     private final OperationLogRepository operationLogRepository;
 
     @Autowired
@@ -40,24 +45,46 @@ public class AuditAspect {
     public void auditPoint(Auditable auditable) {
     }
 
-    @Before(value = "auditPoint(auditable)", argNames = "jp,auditable")
-    public void before(JoinPoint jp, Auditable auditable) {
-        startTime.set(OffsetDateTime.now());
+    @Around(value = "auditPoint(auditable)", argNames = "pjp,auditable")
+    public Object doAudit(ProceedingJoinPoint pjp, Auditable auditable) throws Throwable {
+        OffsetDateTime start = OffsetDateTime.now();
+
+        try {
+            Object result = pjp.proceed();
+            // 成功时审计：哪怕审计挂了，也要正常返回 result
+            executeLogSafely(() -> onSuccess(pjp, auditable, result, start));
+            return result;
+        } catch (Throwable ex) {
+            // 失败时审计：哪怕审计挂了，也要把原始异常 ex 抛出去
+            executeLogSafely(() -> onFailure(pjp, auditable, ex, start));
+            throw ex;
+        }
     }
 
-    @AfterReturning(pointcut = "auditPoint(auditable)", returning = "ret", argNames = "jp,auditable,ret")
-    public void onSuccess(JoinPoint jp, Auditable auditable, Object ret) {
+    /**
+     * 核心：确保审计逻辑的任何异常都不会干扰主业务流程
+     */
+    private void executeLogSafely(Runnable runnable) {
+        try {
+            runnable.run();
+        } catch (Exception e) {
+            // 使用 log.error 而不是抛出，确保业务线程继续
+            log.error("Audit log execution failed", e);
+        }
+    }
+
+
+    public void onSuccess(JoinPoint jp, Auditable auditable, Object ret, OffsetDateTime executedAt) {
         Map<String, Object> details = extractJoinPoint2Details(jp);
         Object result = auditable.logResult() ? ret : null;
         saveOperationLog(auditable.actionName(), auditable.actionType(), TaskStatus.SUCCESS.name(), details, result,
-                null);
+                null, executedAt);
     }
 
-    @AfterThrowing(pointcut = "auditPoint(auditable)", throwing = "ex", argNames = "jp,auditable,ex")
-    public void onFailure(JoinPoint jp, Auditable auditable, Throwable ex) {
+    public void onFailure(JoinPoint jp, Auditable auditable, Throwable ex, OffsetDateTime executedAt) {
         Map<String, Object> details = extractJoinPoint2Details(jp);
         saveOperationLog(auditable.actionName(), auditable.actionType(), TaskStatus.FAILED.name(), details, null,
-                ex.getMessage());
+                ex.getMessage(), executedAt);
     }
 
     private void saveOperationLog(String actionName,
@@ -65,8 +92,8 @@ public class AuditAspect {
                                   String status,
                                   Map<String, Object> details,
                                   Object result,
-                                  String errorMsg) {
-        OffsetDateTime executedAt = startTime.get();
+                                  String errorMsg,
+                                  OffsetDateTime executedAt) {
         Duration duration = Duration.between(executedAt, OffsetDateTime.now());
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         String executor;
@@ -88,7 +115,6 @@ public class AuditAspect {
             operationLog.setResultData(result);
         }
         operationLogRepository.save(operationLog);
-        startTime.remove();
     }
 
     private Map<String, Object> extractJoinPoint2Details(JoinPoint jp) {

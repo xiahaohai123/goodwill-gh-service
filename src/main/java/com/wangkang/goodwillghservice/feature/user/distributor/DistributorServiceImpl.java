@@ -22,11 +22,13 @@ import com.wangkang.goodwillghservice.feature.tilersale.service.SaleAvailableSer
 import com.wangkang.goodwillghservice.security.BuiltInPermissionGroup;
 import com.wangkang.goodwillghservice.share.util.BizAssert;
 import com.wangkang.goodwillghservice.share.util.DateUtil;
-import jakarta.transaction.Transactional;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.stereotype.Service;
+import org.springframework.transaction.annotation.Transactional;
+import org.springframework.transaction.support.TransactionSynchronization;
+import org.springframework.transaction.support.TransactionSynchronizationManager;
 
 import java.time.OffsetDateTime;
 import java.util.*;
@@ -186,11 +188,22 @@ public class DistributorServiceImpl implements DistributorService {
         distributorProfileRepository.deleteById(profileId);
     }
 
+    @Auditable(actionType = ActionType.DISTRIBUTOR, actionName = "Update available sales calculator baseline")
+    @Transactional
     @Override
-    public Collection<SaleAvailableDTO> getSaleAvailable(UUID distributorId) {
-
-
-        return List.of();
+    public void updateAvailableSalesCalBaseline4Distributor(UUID distributorId, OffsetDateTime baseline) {
+        int updatedRows = distributorProfileRepository.updateBaselineByUserId(distributorId, baseline);
+        if (updatedRows == 0) {
+            throw new I18nBusinessException("Update failed, profile not found");
+        }
+        // 注册一个事务同步回调，只有在 commit 成功后才执行异步逻辑
+        TransactionSynchronizationManager.registerSynchronization(new TransactionSynchronization() {
+            @Override
+            public void afterCommit() {
+                // 异步方法
+                saleAvailableService.buildFullSnapshot4Distributor(distributorId);
+            }
+        });
     }
 
     @Override

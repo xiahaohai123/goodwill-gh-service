@@ -1,5 +1,6 @@
 package com.wangkang.goodwillghservice.feature.tilersale.service;
 
+import com.wangkang.goodwillghservice.core.exception.BusinessException;
 import com.wangkang.goodwillghservice.core.exception.I18nBusinessException;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.distributor.model.DistributorExternalInfo;
 import com.wangkang.goodwillghservice.dao.goodwillghservice.distributor.model.DistributorProfile;
@@ -17,15 +18,21 @@ import com.wangkang.goodwillghservice.feature.audit.entity.Auditable;
 import com.wangkang.goodwillghservice.feature.k3cloud.model.OrderCloseStatus;
 import com.wangkang.goodwillghservice.feature.tilersale.model.SaleAvailableDTO;
 import com.wangkang.goodwillghservice.share.util.DateUtil;
+import org.apache.commons.logging.Log;
+import org.apache.commons.logging.LogFactory;
 import org.jetbrains.annotations.NotNull;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.OffsetDateTime;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.TimeUnit;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.function.Function;
 import java.util.stream.Collectors;
 
@@ -34,11 +41,13 @@ import java.util.stream.Collectors;
 public class SaleAvailableServiceImpl implements SaleAvailableService {
 
 
+    private static final Log log = LogFactory.getLog(SaleAvailableServiceImpl.class);
     private final DistributorProfileRepository distributorProfileRepository;
     private final K3SaleOrderRepository k3SaleOrderRepository;
     private final TileRepository tileRepository;
     private final TilerSalesRecordRepository tilerSalesRecordRepository;
     private final SaleAvailableSnapshotRepository saleAvailableSnapshotRepository;
+    private final Map<UUID, ReentrantLock> distributorLocks = new ConcurrentHashMap<>();
 
     public SaleAvailableServiceImpl(DistributorProfileRepository distributorProfileRepository,
                                     K3SaleOrderRepository k3SaleOrderRepository, TileRepository tileRepository,
@@ -51,25 +60,55 @@ public class SaleAvailableServiceImpl implements SaleAvailableService {
         this.saleAvailableSnapshotRepository = saleAvailableSnapshotRepository;
     }
 
+    private void executeWithLock(UUID distributorId, Runnable businessLogic) {
+        ReentrantLock lock = distributorLocks.computeIfAbsent(distributorId, k -> new ReentrantLock());
+        try {
+            // 尝试获锁，5秒超时
+            if (lock.tryLock(5, TimeUnit.SECONDS)) {
+                try {
+                    businessLogic.run();
+                } finally {
+                    lock.unlock();
+                }
+            } else {
+                // 获锁失败，直接抛出业务异常
+                throw new BusinessException("经销商[" + distributorId + "]统计任务正在处理中，请稍后再试");
+            }
+        } catch (InterruptedException e) {
+            Thread.currentThread().interrupt();
+            throw new BusinessException("统计任务被中断");
+        }
+    }
+
     @Auditable(actionType = ActionType.TILER_SALES, actionName = "Take full snapshot for all distributor")
     @Override
     public void buildFullSnapshot4AllDistributor() {
         // 按经销商分组，一个经销商算一次，后期可以考虑使用多线程模型做
         List<DistributorProfile> allProfile = distributorProfileRepository.findAllWithExternalDistributor();
         for (DistributorProfile distributorProfile : allProfile) {
-            takeFullSnapshot4Distributor(distributorProfile);
+            try {
+                // 在循环内部加锁，确保针对每个人的操作是互斥的
+                executeWithLock(distributorProfile.getUser().getId(),
+                        () -> takeFullSnapshot4Distributor(distributorProfile));
+            } catch (Exception e) {
+                // 批量处理时，如果某个人拿不到锁，记录日志并继续下一个，不要中断整个任务
+                log.error("批量全量构建失败，经销商ID: " + distributorProfile.getUser().getId(), e);
+            }
         }
     }
 
     @Auditable(actionType = ActionType.TILER_SALES, actionName = "Take full snapshot for specific distributor")
+    @Async
     @Override
     public void buildFullSnapshot4Distributor(UUID distributorId) {
-        DistributorProfile distributorProfile = distributorProfileRepository.findByUserIdWithExternalDistributor(
-                distributorId);
-        if (distributorProfile == null) {
-            throw new IllegalArgumentException("Can't find distributor profile for " + distributorId);
-        }
-        takeFullSnapshot4Distributor(distributorProfile);
+        executeWithLock(distributorId, () -> {
+            DistributorProfile distributorProfile = distributorProfileRepository.findByUserIdWithExternalDistributor(
+                    distributorId);
+            if (distributorProfile == null) {
+                throw new IllegalArgumentException("Can't find distributor profile for " + distributorId);
+            }
+            takeFullSnapshot4Distributor(distributorProfile);
+        });
     }
 
     private void takeFullSnapshot4Distributor(DistributorProfile distributorProfile) {
@@ -295,20 +334,28 @@ public class SaleAvailableServiceImpl implements SaleAvailableService {
     public void buildIncrementalSnapshot4AllDistributor() {
         // 按经销商分组，一个经销商算一次，后期可以考虑使用多线程模型做
         List<DistributorProfile> allProfile = distributorProfileRepository.findAllWithExternalDistributor();
+
         for (DistributorProfile distributorProfile : allProfile) {
-            buildIncrementalSnapshot4Distributor(distributorProfile);
+            try {
+                executeWithLock(distributorProfile.getUser().getId(),
+                        () -> buildIncrementalSnapshot4Distributor(distributorProfile));
+            } catch (Exception e) {
+                log.error("批量增量构建失败，经销商ID: " + distributorProfile.getUser().getId(), e);
+            }
         }
     }
 
     @Auditable(actionType = ActionType.TILER_SALES, actionName = "Take incremental snapshot for specific distributor")
     @Override
     public void buildIncrementalSnapshot4Distributor(UUID distributorId) {
-        DistributorProfile distributorProfile = distributorProfileRepository.findByUserIdWithExternalDistributor(
-                distributorId);
-        if (distributorProfile == null) {
-            throw new IllegalArgumentException("Can't find distributor profile for " + distributorId);
-        }
-        buildIncrementalSnapshot4Distributor(distributorProfile);
+        executeWithLock(distributorId, () -> {
+            DistributorProfile distributorProfile = distributorProfileRepository.findByUserIdWithExternalDistributor(
+                    distributorId);
+            if (distributorProfile == null) {
+                throw new IllegalArgumentException("Can't find distributor profile for " + distributorId);
+            }
+            buildIncrementalSnapshot4Distributor(distributorProfile);
+        });
     }
 
     private void buildIncrementalSnapshot4Distributor(DistributorProfile distributorProfile) {

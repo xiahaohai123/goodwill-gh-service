@@ -5,10 +5,12 @@ import com.wangkang.goodwillghservice.dao.goodwillghservice.distributor.model.Di
 import com.wangkang.goodwillghservice.dao.goodwillghservice.security.model.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.JpaSpecificationExecutor;
+import org.springframework.data.jpa.repository.Modifying;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -36,5 +38,9 @@ public interface DistributorProfileRepository extends JpaRepository<DistributorP
             WHERE dp.user.id = :distributorId
             """)
     DistributorProfile findByUserIdWithExternalDistributor(@Param("distributorId") UUID distributorId);
+
+    @Modifying
+    @Query("UPDATE DistributorProfile p SET p.availableSalesCalFrom = :baseline WHERE p.user.id = :userId")
+    int updateBaselineByUserId(UUID userId, OffsetDateTime baseline);
 
 }

@@ -1,11 +1,10 @@
 package com.wangkang.goodwillghservice.feature.user.distributor;
 
 
-import com.wangkang.goodwillghservice.feature.tilersale.model.SaleAvailableDTO;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 
-import java.util.Collection;
+import java.time.OffsetDateTime;
 import java.util.UUID;
 
 public interface DistributorService {
@@ -64,9 +63,10 @@ public interface DistributorService {
 
 
     /**
-     * 获取经销商的可用销售量信息
+     * 为某个经销商更新计算计算销售可用量计算基线
+     * 更新基线后会重新计算快照
      * @param distributorId 经销商用户 id
-     * @return 可用销售量信息集合
+     * @param baseline      基线时间，不可以小于 2024 年
      */
-    Collection<SaleAvailableDTO> getSaleAvailable(UUID distributorId);
+    void updateAvailableSalesCalBaseline4Distributor(UUID distributorId, OffsetDateTime baseline);
 }

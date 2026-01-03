@@ -17,6 +17,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
 
+import java.time.OffsetDateTime;
 import java.util.List;
 import java.util.UUID;
 
@@ -61,7 +62,7 @@ public class ManagerController {
     @PreAuthorize("hasAuthority('DISTRIBUTOR_QUERY')")
     @GetMapping("/list/distributor/external/unbound")
     public ResponseEntity<Object> getUnboundDistributorExternalList(Pageable pageable,
-                                                             PagedResourcesAssembler<DistributorExternalInfoDTO> assembler) {
+                                                                    PagedResourcesAssembler<DistributorExternalInfoDTO> assembler) {
         Page<DistributorExternalInfoDTO> page = distributorService.getUnboundDistributorsExternal(pageable);
         return ResponseEntity.ok(assembler.toModel(page));
     }
@@ -93,10 +94,18 @@ public class ManagerController {
         return ResponseEntity.noContent().build();
     }
 
+    @PutMapping("/distributor/baseline")
+    public ResponseEntity<Object> updateSaleAvailableCalBaseLine(@Valid @RequestBody AvailableSalesCalBaselineDTO dto) {
+        UUID distributorId = dto.getUserId();
+        OffsetDateTime baseline = dto.getBaseline();
+        distributorService.updateAvailableSalesCalBaseline4Distributor(distributorId, baseline);
+        return ResponseEntity.noContent().build();
+    }
+
     @PreAuthorize("hasAuthority('TILER_QUERY')")
     @GetMapping("/tiler")
     public ResponseEntity<Object> getTilerList(Pageable pageable,
-                                                     PagedResourcesAssembler<User> assembler) {
+                                               PagedResourcesAssembler<User> assembler) {
         Page<User> page = tilerService.getTilerPage(pageable);
         return ResponseEntity.ok(assembler.toModel(page));
     }
